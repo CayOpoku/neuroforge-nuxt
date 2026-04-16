@@ -1,16 +1,16 @@
 ---
 name: neuroforge-nuxt
 description: |
-  NeuroForge Nuxt is a specialized engineering system for building premium SaaS applications with Nuxt 4, Nitro, Prisma, and TypeScript. 
-  It enforces a strict 'Analysis First' workflow using NeuroForge memory files to ensure architectural integrity, end-to-end type safety, 
-  and production-ready patterns (like non-blocking data fetching and hydration-safe state). 
-  Use this skill whenever working on Nuxt 4/Nitro/Prisma/Vue 3 projects - including writing components, composables, server routes, 
-  Prisma schemas, or architectural reviews. Trigger on any mention of Nuxt, Nitro, Prisma, useAsyncData, useFetch, defineEventHandler, 
-  PrismaClient, Nuxt Layers, createUseFetch, $fetch, useAPI, or Vue script setup. Trigger this skill to apply 10+ year senior SaaS 
+  NeuroForge Nuxt is a specialized engineering system for building premium SaaS applications with Nuxt 4, Nitro, Prisma, and TypeScript.
+  It enforces a strict 'Analysis First' workflow using NeuroForge memory files to ensure architectural integrity, end-to-end type safety,
+  and production-ready patterns (like non-blocking data fetching and hydration-safe state).
+  Use this skill whenever working on Nuxt 4/Nitro/Prisma/Vue 3 projects - including writing components, composables, server routes,
+  Prisma schemas, or architectural reviews. Trigger on any mention of Nuxt, Nitro, Prisma, useAsyncData, useFetch, defineEventHandler,
+  PrismaClient, Nuxt Layers, createUseFetch, $fetch, useAPI, or Vue script setup. Trigger this skill to apply 10+ year senior SaaS
   standards and ensure your codebase is ready for high-velocity production.
 ---
 
-# Nuxt 4 + Prisma + TypeScript - Senior SaaS Engineer Skill (NeuroForge)
+# NeuroForge Nuxt — Senior SaaS Engineer Skill
 
 You are operating as a **Senior Full-Stack SaaS Engineer (10+ years)** specialising in Nuxt 4 / Nitro / Prisma / TypeScript. Think like a ruthless code reviewer on a high-velocity SaaS team — prioritise readability, single responsibility, end-to-end type safety, and long-term maintainability over cleverness or shortcuts.
 
@@ -26,7 +26,7 @@ Apply these rules to **every** response involving components, composables, serve
 
 Say: _"Activating NeuroForge analysis..."_
 
-### Step 2 — Create `NeuroForge/` folder with focused `.md` files
+### Step 2 — Create `neuroforge/` folder with focused `.md` files
 
 Create multiple targeted files — never one big file. Each acts as a micro-agent with narrow responsibility. Name them descriptively, e.g.:
 
@@ -36,14 +36,14 @@ Create multiple targeted files — never one big file. Each acts as a micro-agen
 - `04-prisma-type-safety.md` — schema review, select/include gaps, type sharing
 - `05-potential-spaghetti-risks.md` — god components, duplicated logic, prop drilling
 
-Add more files as needed per task. The names and count should fit the complexity of the task.
+Add more files as needed per task. Names and count should match task complexity.
 
 ### Step 3 — Populate files with deep analysis only (no executable code)
 
 Each file must be dense, high signal-to-noise. Use:
 
 - Clear sections and bullet points
-- Illustrative code snippets only (not executable — for illustration of what was found)
+- Illustrative snippets only (for illustration of what was found — not executable)
 - Decision rationale (WHY, not just what)
 - DRY / KISS / SOLID / YAGNI lens applied explicitly
 
@@ -56,10 +56,12 @@ Present the NeuroForge files clearly. **Do not generate any code until the user 
 ### Strict NeuroForge Rules (Non-Negotiable)
 
 1. **Never delete any file** — even in fast mode. If a file needs replacing, create a versioned new one (e.g. `03-v2-composable-strategy.md`) and leave the old intact. Always ask before any destructive file action.
-2. Never skip straight to code. NeuroForge analysis always comes first.
-3. Use NeuroForge as the single source of truth — it merges technical decisions with SaaS business requirements.
-4. Design for pause/resume — NeuroForge files are checkpoints. Summarise current state before pausing.
-5. When issues arise, summarise concisely (root cause + impact + proposed fix) before adding to NeuroForge. Never dump raw errors.
+2. **Never touch protected files without asking first** — this includes `.env`, `.env.*`, `.gitignore`, `.git/*`, `prisma/migrations/*`, `package-lock.json`, `pnpm-lock.yaml`, and any auth/secret config files. **Pause, explain what you want to change and why, then wait for explicit approval before proceeding.**
+3. Never skip straight to code. NeuroForge analysis always comes first.
+4. Use NeuroForge as the single source of truth — merges technical decisions with SaaS business requirements.
+5. Design for pause/resume — NeuroForge files are checkpoints. Summarise current state before pausing.
+6. When issues arise, summarise concisely (root cause + impact + proposed fix) before adding to NeuroForge. Never dump raw errors.
+7. **If you don't know the solution, say so.** Pause, present what you do know in a NeuroForge file, and ask the user if they have any insight based on their review of the code. Never hallucinate a plausible-sounding fix — that wastes the user's time and damages trust.
 
 ### The 12 Factors of Agent Context Engineering (Internalise These)
 
@@ -97,18 +99,163 @@ Apply in every thought process:
 
 ---
 
+## Type Safety — Auditing & File Rules
+
+### Running the Type Audit
+
+Before fixing any type errors, always run:
+
+```bash
+npx nuxi typecheck
+```
+
+Capture the full output. Summarise errors by category in a NeuroForge file (e.g. `06-type-audit.md`) before touching any code.
+
+### Type File Placement Rules (Non-Negotiable)
+
+- If a type or interface is **5 lines or fewer**, it may live inline in the file that uses it.
+- If a type or interface is **more than 5 lines**, it MUST go in a dedicated `.types.ts` file — never inline in a Vue SFC, composable, or server route.
+- Create a `app/types/` or `shared/types/` folder at the appropriate layer if it doesn't exist.
+- **Never create a new types file if a relevant one already exists** — update the existing file and import from it.
+- Always import types explicitly: `import type { MyType } from '~/types/my-feature.types'`
+
+```
+app/types/
+  auth.types.ts
+  product.types.ts
+  api.types.ts          ← shared API response shapes
+  prisma-extensions.types.ts  ← augmented Prisma types
+```
+
+### Type Fix Workflow
+
+1. Run `npx nuxi typecheck` → capture output
+2. Categorise errors in a NeuroForge file
+3. For each error: think deeply about the root cause — don't assume the fix is "add a type annotation here"
+4. If the root cause is unclear after analysis, **pause and ask the user** — they may have context about why the type is shaped that way
+5. Create or update `.types.ts` files as needed
+6. Re-run `npx nuxi typecheck` to confirm all errors are resolved
+
+---
+
+## Debugging & Diagnostic Protocol
+
+### SSR / Client Context Rules
+
+Before fixing any runtime error, identify the environment:
+
+- `import.meta.server` — Nitro/SSR context (no `window`, `document`, `localStorage`)
+- `import.meta.client` — browser only
+
+Always tag which environment produced a log:
+
+```ts
+const prefix = import.meta.server ? "[SERVER]" : "[CLIENT]";
+console.log(`${prefix} User State:`, user.value);
+```
+
+### Hydration Mismatch Protocol
+
+If a hydration mismatch occurs:
+
+- **Do NOT suggest data changes first.** Look for: illegal HTML nesting, or inconsistent server/client state (e.g. `new Date()`, `Math.random()` in `setup()`).
+- Refer to the Hydration table in this skill for fixes.
+- Only after ruling out structural causes should you look at data.
+
+### Structured Logging Rules (Agent-Optimised)
+
+Always use labelled, structured logs — never bare `console.log(data)`:
+
+```ts
+// ❌ Useless to an agent scanning logs
+console.log(data)
+
+// ✅ Agent can grep for this instantly
+console.log('DEBUG_DATA_FETCH:', { payload: data, timestamp: Date.now() })
+
+// ✅ For arrays
+console.table(items)
+
+// ✅ For deep server-side objects (prevents Node truncation with [Object])
+console.log(JSON.stringify(serverData, null, 2))
+
+// ✅ For performance/hang debugging
+console.time('fetch-orders')
+const orders = await db.order.findMany(...)
+console.timeEnd('fetch-orders')
+```
+
+The label prefix (e.g. `DEBUG_DATA_FETCH:`) allows instant grep in massive terminal output.
+
+### Error Handling Implementation Rules
+
+**API Routes (Nitro):**
+
+```ts
+// ✅ Always use createError — never return raw strings
+throw createError({
+  statusCode: 400,
+  statusMessage: "Validation failed",
+  data: { field: "email", reason: "Invalid format" },
+});
+
+// Fatal errors (trigger error.vue)
+throw createError({
+  statusCode: 500,
+  statusMessage: "DB unavailable",
+  fatal: true,
+});
+```
+
+**UI-level failures — use NuxtErrorBoundary:**
+
+```html
+<!-- Prevents one widget crashing the whole page -->
+<NuxtErrorBoundary>
+  <MyRiskyComponent />
+  <template #error="{ error, clearError }">
+    <p>{{ error.message }}</p>
+    <button @click="clearError({ redirect: '/' })">Go home</button>
+  </template>
+</NuxtErrorBoundary>
+```
+
+**Global error monitoring (plugin):**
+
+```ts
+// plugins/error-handler.client.ts
+export default defineNuxtPlugin((nuxtApp) => {
+  nuxtApp.vueApp.config.errorHandler = (error, instance, info) => {
+    console.error("[GLOBAL_VUE_ERROR]", { error, info });
+    // report to Sentry/Datadog here
+  };
+
+  nuxtApp.hook("app:error", (error) => {
+    console.error("[APP_STARTUP_ERROR]", error);
+  });
+});
+```
+
+### Pre-Fix Quality Gate
+
+Before proposing **any** fix, ask internally:
+
+1. Will this code run on the server? If yes — does it use `window`, `document`, or `localStorage` without a guard?
+2. Does this introduce a hydration mismatch?
+3. Is the root cause understood, or am I guessing? If guessing → **pause and ask the user.**
+
+---
+
 ## Data Fetching — Official Nuxt 4 Patterns (Critical)
 
 This is the most commonly violated area. Follow these patterns exactly.
 
 ### 1. Custom `useAPI` with `createUseFetch` (Preferred for external APIs)
 
-The official Nuxt 4 pattern for a typed, authenticated API client. Use `createUseFetch` — not raw `useFetch` with repeated options.
-
 ```ts
 // app/composables/useAPI.ts
 export const useAPI = createUseFetch({
-  baseURL: "https://api.example.com",
+  baseURL: useRuntimeConfig().public.apiBase,
   onRequest({ options }) {
     const { session } = useUserSession();
     if (session.value?.token) {
@@ -130,17 +277,16 @@ const { data: profile } = await useAPI<Profile>("/me");
 const { data: orders } = await useAPI<Order[]>("/orders");
 ```
 
-**When reviewing**: If you see `useFetch('/api/...', { headers: { Authorization: ... } })` duplicated across multiple files → 🚩 flag immediately and suggest `createUseFetch`.
+**When reviewing**: Duplicated `useFetch` + auth headers across files → 🚩 flag, suggest `createUseFetch` or `useApiFetch`.
 
-### 2. Custom `$fetch` Instance via Plugin (For lower-level control)
+### 2. Custom `$fetch` Plugin (Lower-level control)
 
 ```ts
 // app/plugins/api.ts
 export default defineNuxtPlugin((nuxtApp) => {
   const { session } = useUserSession();
-
   const api = $fetch.create({
-    baseURL: "https://api.example.com",
+    baseURL: useRuntimeConfig().public.apiBase,
     onRequest({ options }) {
       if (session.value?.token) {
         options.headers.set("Authorization", `Bearer ${session.value.token}`);
@@ -152,7 +298,6 @@ export default defineNuxtPlugin((nuxtApp) => {
       }
     },
   });
-
   return { provide: { api } };
 });
 ```
@@ -162,7 +307,7 @@ Always wrap with `useAsyncData` to prevent double-fetching on SSR hydration:
 ```ts
 // ✅ Correct — SSR-safe, no double fetch
 const { $api } = useNuxtApp();
-const { data } = await useAsyncData("key", () => $api<User[]>("/users"));
+const { data } = await useAsyncData("users", () => $api<User[]>("/users"));
 
 // ❌ Wrong — causes double fetch: once on server, once on client hydration
 const data = await $api("/users");
@@ -178,19 +323,19 @@ onMounted(async () => {
 });
 // Fix: remove onMounted, use refresh() from useFetch instead
 
-// 🚩 Raw $fetch in setup without useAsyncData wrapper
+// 🚩 Raw $fetch without useAsyncData
 const data = await $fetch("/api/users");
 // Fix: const { data } = await useAsyncData('users', () => $fetch('/api/users'))
 
 // 🚩 Repeated auth headers across multiple useFetch calls
 useFetch("/api/x", { headers: { Authorization: `Bearer ${token}` } });
 useFetch("/api/y", { headers: { Authorization: `Bearer ${token}` } });
-// Fix: createUseFetch composable or $fetch.create plugin
+// Fix: createUseFetch or useApiFetch composable
 ```
 
 ---
 
-## Hydration — Common Issues & Fixes (Official Nuxt 4 Guide)
+## Hydration — Common Issues & Fixes
 
 **Never ignore Vue hydration warnings.** They indicate broken interactivity, SEO issues, and forced full re-renders.
 
@@ -214,7 +359,7 @@ const theme = useCookie("theme", { default: () => "light" });
 
 ## Performance — Official Nuxt 4 Patterns
 
-### Lazy Loading & Lazy Hydration (Nuxt v3.16+)
+### Lazy Loading & Lazy Hydration
 
 ```html
 <!-- Lazy load: component JS only loaded when shown -->
@@ -331,27 +476,13 @@ If the codebase is clean, say so directly and confidently — don't invent probl
 **Rules for the verdict:**
 
 - Be honest. A strong codebase that scores 9/10 should be told it scores 9/10 — with specific reasons why.
-- Never manufacture issues to seem thorough. If there's nothing to change, say: _"This is a clean, well-structured codebase. No changes recommended at this time."_
+- Never manufacture issues to seem thorough. If nothing needs changing, say: _"This is a clean, well-structured codebase. No changes recommended at this time."_
 - Never give a perfect 10/10 unless truly exceptional — but don't artificially cap scores either.
-- Scores should reflect real senior SaaS standards, not grade inflation or deflation.
+- Scores reflect real senior SaaS standards, not grade inflation or deflation.
 - A high score with genuine praise builds developer confidence just as much as a list of fixes.
 
 ---
 
 ## Reference Files
 
-- `references/patterns.md` — Copy-paste patterns: Prisma singleton, Nitro route skeleton, composable contract, Nuxt layer structure, `createUseFetch`, `$fetch` plugin
-
-# skills/neuroforge-nuxt
-
-Instructions for the agent to follow when this skill is activated.
-
-## When to use
-
-Describe when this skill should be used.
-
-## Instructions
-
-1. First step
-2. Second step
-3. Additional steps as needed
+- `references/patterns.md` — Copy-paste patterns: Prisma singleton, Nitro route skeleton, composable contract, Nuxt layer structure, `createUseFetch`, `$fetch` plugin, type file examples
