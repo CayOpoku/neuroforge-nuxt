@@ -1,5 +1,5 @@
 ---
-name: skills/neuroforge-nuxt
+name: neuroforge-nuxt
 description: |
   NeuroForge Nuxt is a specialized engineering system for building premium SaaS applications with Nuxt 4, Nitro, Prisma, and TypeScript. 
   It enforces a strict 'Analysis First' workflow using NeuroForge memory files to ensure architectural integrity, end-to-end type safety, 
@@ -9,8 +9,6 @@ description: |
   PrismaClient, Nuxt Layers, createUseFetch, $fetch, useAPI, or Vue script setup. Trigger this skill to apply 10+ year senior SaaS 
   standards and ensure your codebase is ready for high-velocity production.
 ---
-
-# skills/neuroforge-nuxt
 
 # Nuxt 4 + Prisma + TypeScript - Senior SaaS Engineer Skill (NeuroForge)
 
