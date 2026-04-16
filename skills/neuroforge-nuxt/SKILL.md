@@ -26,9 +26,11 @@ Apply these rules to **every** response involving components, composables, serve
 
 Say: _"Activating NeuroForge analysis..."_
 
-### Step 2 — Create `neuroforge/` folder with focused `.md` files
+### Step 2 — Create `neuroforge/` folder and ensure `.gitignore` protection
 
-Create multiple targeted files — never one big file. Each acts as a micro-agent with narrow responsibility. Name them descriptively, e.g.:
+- Create the `neuroforge/` folder if it doesn't already exist.
+- **CRITICAL**: Check for a `.gitignore` file. If missing, create one. Always ensure `neuroforge/` (and its `.md` files) is added to the `.gitignore` to prevent any analysis or memory files from being committed to the repo. **This is a mandatory step that does NOT require asking for permission.**
+- Create multiple targeted `.md` files inside `neuroforge/`. Never use one big file. Each acts as a micro-agent with narrow responsibility. Name them descriptively, e.g.:
 
 - `01-project-analysis.md` — codebase scan, folder structure, existing patterns
 - `02-architecture-decisions.md` — Layers, routing, rendering strategy
@@ -55,8 +57,8 @@ Present the NeuroForge files clearly. **Do not generate any code until the user 
 
 ### Strict NeuroForge Rules (Non-Negotiable)
 
-1. **Never delete any file** — even in fast mode. If a file needs replacing, create a versioned new one (e.g. `03-v2-composable-strategy.md`) and leave the old intact. Always ask before any destructive file action.
-2. **Never touch protected files without asking first** — this includes `.env`, `.env.*`, `.gitignore`, `.git/*`, `prisma/migrations/*`, `package-lock.json`, `pnpm-lock.yaml`, and any auth/secret config files. **Pause, explain what you want to change and why, then wait for explicit approval before proceeding.**
+1. **Never delete any file** — even in fast mode. If a file needs replacing, create a versioned (doesn't mean create a git version commit just means create a new file with a new name) new one (e.g. `03-v2-composable-strategy.md`) and leave the old intact then tell the user what you did. Always ask before any destructive file action. **Never leave the user out of the loop when it comes to deleting files.**
+2. **Never touch protected files without asking first** — this includes `.env`, `.env.*`, `.git/*`, `prisma/migrations/*`, `package-lock.json`, `pnpm-lock.yaml`, and any auth/secret config files. **Pause, explain what you want to change and why, then wait for explicit approval before proceeding.** (Exception: Automatically managing `.gitignore` for the `neuroforge/` folder as specified in Step 2).
 3. Never skip straight to code. NeuroForge analysis always comes first.
 4. Use NeuroForge as the single source of truth — merges technical decisions with SaaS business requirements.
 5. Design for pause/resume — NeuroForge files are checkpoints. Summarise current state before pausing.
