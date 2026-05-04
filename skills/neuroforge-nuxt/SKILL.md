@@ -59,11 +59,13 @@ Present the NeuroForge files clearly. **Do not generate any code until the user 
 
 1. **Never delete any file** — even in fast mode. If a file needs replacing, create a versioned (doesn't mean create a git version commit just means create a new file with a new name) new one (e.g. `03-v2-composable-strategy.md`) and leave the old intact then tell the user what you did. Always ask before any destructive file action. **Never leave the user out of the loop when it comes to deleting files.**
 2. **Never touch protected files without asking first** — this includes `.env`, `.env.*`, `.git/*`, `prisma/migrations/*`, `package-lock.json`, `pnpm-lock.yaml`, and any auth/secret config files. **Pause, explain what you want to change and why, then wait for explicit approval before proceeding.** (Exception: Automatically managing `.gitignore` for the `neuroforge/` folder as specified in Step 2).
-3. Never skip straight to code. NeuroForge analysis always comes first.
-4. Use NeuroForge as the single source of truth — merges technical decisions with SaaS business requirements.
-5. Design for pause/resume — NeuroForge files are checkpoints. Summarise current state before pausing.
-6. When issues arise, summarise concisely (root cause + impact + proposed fix) before adding to NeuroForge. Never dump raw errors.
-7. **If you don't know the solution, say so.** Pause, present what you do know in a NeuroForge file, and ask the user if they have any insight based on their review of the code. Never hallucinate a plausible-sounding fix — that wastes the user's time and damages trust.
+3. **Never skip straight to code.** NeuroForge analysis always comes first.
+4. **Mandatory Consent for Implementation**: You must NEVER write, modify, or suggest actual implementation code until the user has explicitly authorized you to do so (e.g., by saying "Proceed" or "Start coding"). There is NO "sneaking" in code changes. If the user hasn't authorized it, you don't write it.
+5. **Verify Every Action**: Never hallucinate that a file has been updated or created. After performing a file operation (like creating a NeuroForge analysis file or updating code), you MUST verify that the file exists and contains the expected content before concluding the task.
+6. **Use NeuroForge as the single source of truth** — merges technical decisions with SaaS business requirements.
+7. **Design for pause/resume** — NeuroForge files are checkpoints. Summarise current state before pausing.
+8. **When issues arise, summarise concisely** (root cause + impact + proposed fix) before adding to NeuroForge. Never dump raw errors.
+9. **If you don't know the solution, say so.** Pause, present what you do know in a NeuroForge file, and ask the user if they have any insight based on their review of the code. Never hallucinate a plausible-sounding fix — that wastes the user's time and damages trust.
 
 ### The 12 Factors of Agent Context Engineering (Internalise These)
 
@@ -95,7 +97,7 @@ Apply in every thought process:
 
 - **Single Responsibility + Feature Slicing** — Every file does ONE thing. Use Nuxt Layers (`layers/`) for domain boundaries. Layers must NEVER import from each other — only from `shared` or root.
 - **DRY + KISS + SOLID** — Extract duplication immediately. Keep files < 150–200 lines.
-- **Type Safety First** — Strict TypeScript always. No `any`, no `unknown` unless explicitly cast. Use Prisma-generated types end-to-end.
+- **Type Safety First** — Strict TypeScript always. **NEVER use `any` or `unknown` as a shortcut.** You MUST find or create a type-safe solution first. Rollback to `any` ONLY as a documented last resort after all type-safe avenues have been exhausted and explained to the user. Use Prisma-generated types end-to-end.
 - **No Spaghetti** — No god-components or god-composables. State → computed → methods → effects ordering always.
 - **Performance & Hydration Safety** — `useFetch`/`useAsyncData` only (never duplicate fetches). Always clean up side effects. Fix all hydration mismatches — never ignore Vue hydration warnings.
 
