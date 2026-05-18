@@ -30,6 +30,8 @@ Say: _"Activating NeuroForge analysis..."_
 
 - Create the `neuroforge/` folder if it doesn't already exist.
 - **CRITICAL**: Check for a `.gitignore` file. If missing, create one. Always ensure `neuroforge/` (and its `.md` files) is added to the `.gitignore` to prevent any analysis or memory files from being committed to the repo. **This is a mandatory step that does NOT require asking for permission.**
+- **UI Reviews folder**: Always create a subfolder `neuroforge/ui-reviews/` for HTML/MD mockup review files to keep visual drafts organized.
+- **Scripts folder**: Put all database seed, test, or automation scripts inside `scripts/`, `test-scripts/`, or `seed-scripts/` at the root/layer rather than letting them clutter the root directory.
 - Create multiple targeted `.md` files inside `neuroforge/`. Never use one big file. Each acts as a micro-agent with narrow responsibility. Name them descriptively, e.g.:
 
 - `01-project-analysis.md` — codebase scan, folder structure, existing patterns
@@ -66,6 +68,7 @@ Present the NeuroForge files clearly. **Do not generate any code until the user 
 7. **Design for pause/resume** — NeuroForge files are checkpoints. Summarise current state before pausing.
 8. **When issues arise, summarise concisely** (root cause + impact + proposed fix) before adding to NeuroForge. Never dump raw errors.
 9. **If you don't know the solution, say so.** Pause, present what you do know in a NeuroForge file, and ask the user if they have any insight based on their review of the code. Never hallucinate a plausible-sounding fix — that wastes the user's time and damages trust.
+10. **Verify Every Action**: Never hallucinate that a file has been updated or created. After performing a file operation, you MUST verify that the file exists and contains the expected content by running actual read/status tools before concluding.
 
 ### The 12 Factors of Agent Context Engineering (Internalise These)
 
@@ -107,305 +110,24 @@ Apply in every thought process:
 
 ### Running the Type Audit
 
-Before fixing any type errors, always run:
-
-```bash
-npx nuxi typecheck
-```
-
-Capture the full output. Summarise errors by category in a NeuroForge file (e.g. `06-type-audit.md`) before touching any code.
+Before fixing any type errors, always run `npx nuxi typecheck`. Capture the full output and summarize errors by category in a NeuroForge file (e.g., `06-type-audit.md`) before modifying any code.
 
 ### Type File Placement Rules (Non-Negotiable)
 
 - If a type or interface is **5 lines or fewer**, it may live inline in the file that uses it.
 - If a type or interface is **more than 5 lines**, it MUST go in a dedicated `.types.ts` file — never inline in a Vue SFC, composable, or server route.
-- Create a `app/types/` or `shared/types/` folder at the appropriate layer if it doesn't exist.
+- Create an `app/types/` or `shared/types/` folder at the appropriate layer if it doesn't exist.
 - **Never create a new types file if a relevant one already exists** — update the existing file and import from it.
 - Always import types explicitly: `import type { MyType } from '~/types/my-feature.types'`
 
-```
-app/types/
-  auth.types.ts
-  product.types.ts
-  api.types.ts          ← shared API response shapes
-  prisma-extensions.types.ts  ← augmented Prisma types
-```
-
 ### Type Fix Workflow
 
-1. Run `npx nuxi typecheck` → capture output
-2. Categorise errors in a NeuroForge file
-3. For each error: think deeply about the root cause — don't assume the fix is "add a type annotation here"
-4. If the root cause is unclear after analysis, **pause and ask the user** — they may have context about why the type is shaped that way
-5. Create or update `.types.ts` files as needed
-6. Re-run `npx nuxi typecheck` to confirm all errors are resolved
-
----
-
-## Debugging & Diagnostic Protocol
-
-### SSR / Client Context Rules
-
-Before fixing any runtime error, identify the environment:
-
-- `import.meta.server` — Nitro/SSR context (no `window`, `document`, `localStorage`)
-- `import.meta.client` — browser only
-
-Always tag which environment produced a log:
-
-```ts
-const prefix = import.meta.server ? "[SERVER]" : "[CLIENT]";
-console.log(`${prefix} User State:`, user.value);
-```
-
-### Hydration Mismatch Protocol
-
-If a hydration mismatch occurs:
-
-- **Do NOT suggest data changes first.** Look for: illegal HTML nesting, or inconsistent server/client state (e.g. `new Date()`, `Math.random()` in `setup()`).
-- Refer to the Hydration table in this skill for fixes.
-- Only after ruling out structural causes should you look at data.
-
-### Structured Logging Rules (Agent-Optimised)
-
-Always use labelled, structured logs — never bare `console.log(data)`:
-
-```ts
-// ❌ Useless to an agent scanning logs
-console.log(data)
-
-// ✅ Agent can grep for this instantly
-console.log('DEBUG_DATA_FETCH:', { payload: data, timestamp: Date.now() })
-
-// ✅ For arrays
-console.table(items)
-
-// ✅ For deep server-side objects (prevents Node truncation with [Object])
-console.log(JSON.stringify(serverData, null, 2))
-
-// ✅ For performance/hang debugging
-console.time('fetch-orders')
-const orders = await db.order.findMany(...)
-console.timeEnd('fetch-orders')
-```
-
-The label prefix (e.g. `DEBUG_DATA_FETCH:`) allows instant grep in massive terminal output.
-
-### Error Handling Implementation Rules
-
-**API Routes (Nitro):**
-
-```ts
-// ✅ Always use createError — never return raw strings
-throw createError({
-  statusCode: 400,
-  statusMessage: "Validation failed",
-  data: { field: "email", reason: "Invalid format" },
-});
-
-// Fatal errors (trigger error.vue)
-throw createError({
-  statusCode: 500,
-  statusMessage: "DB unavailable",
-  fatal: true,
-});
-```
-
-**UI-level failures — use NuxtErrorBoundary:**
-
-```html
-<!-- Prevents one widget crashing the whole page -->
-<NuxtErrorBoundary>
-  <MyRiskyComponent />
-  <template #error="{ error, clearError }">
-    <p>{{ error.message }}</p>
-    <button @click="clearError({ redirect: '/' })">Go home</button>
-  </template>
-</NuxtErrorBoundary>
-```
-
-**Global error monitoring (plugin):**
-
-```ts
-// plugins/error-handler.client.ts
-export default defineNuxtPlugin((nuxtApp) => {
-  nuxtApp.vueApp.config.errorHandler = (error, instance, info) => {
-    console.error("[GLOBAL_VUE_ERROR]", { error, info });
-    // report to Sentry/Datadog here
-  };
-
-  nuxtApp.hook("app:error", (error) => {
-    console.error("[APP_STARTUP_ERROR]", error);
-  });
-});
-```
-
-### Pre-Fix Quality Gate
-
-Before proposing **any** fix, ask internally:
-
-1. Will this code run on the server? If yes — does it use `window`, `document`, or `localStorage` without a guard?
-2. Does this introduce a hydration mismatch?
-3. Is the root cause understood, or am I guessing? If guessing → **pause and ask the user.**
-
----
-
-## Data Fetching — Official Nuxt 4 Patterns (Critical)
-
-This is the most commonly violated area. Follow these patterns exactly.
-
-### 1. Custom `useAPI` with `createUseFetch` (Preferred for external APIs)
-
-```ts
-// app/composables/useAPI.ts
-export const useAPI = createUseFetch({
-  baseURL: useRuntimeConfig().public.apiBase,
-  onRequest({ options }) {
-    const { session } = useUserSession();
-    if (session.value?.token) {
-      options.headers.set("Authorization", `Bearer ${session.value.token}`);
-    }
-  },
-  async onResponseError({ response }) {
-    if (response.status === 401) {
-      await navigateTo("/login");
-    }
-  },
-});
-```
-
-Usage in pages/components — clean, no repeated config:
-
-```ts
-const { data: profile } = await useAPI<Profile>("/me");
-const { data: orders } = await useAPI<Order[]>("/orders");
-```
-
-**When reviewing**: Duplicated `useFetch` + auth headers across files → 🚩 flag, suggest `createUseFetch` or `useApiFetch`.
-
-### 2. Custom `$fetch` Plugin (Lower-level control)
-
-```ts
-// app/plugins/api.ts
-export default defineNuxtPlugin((nuxtApp) => {
-  const { session } = useUserSession();
-  const api = $fetch.create({
-    baseURL: useRuntimeConfig().public.apiBase,
-    onRequest({ options }) {
-      if (session.value?.token) {
-        options.headers.set("Authorization", `Bearer ${session.value.token}`);
-      }
-    },
-    async onResponseError({ response }) {
-      if (response.status === 401) {
-        await nuxtApp.runWithContext(() => navigateTo("/login"));
-      }
-    },
-  });
-  return { provide: { api } };
-});
-```
-
-Always wrap with `useAsyncData` to prevent double-fetching on SSR hydration:
-
-```ts
-// ✅ Correct — SSR-safe, no double fetch
-const { $api } = useNuxtApp();
-const { data } = await useAsyncData("users", () => $api<User[]>("/users"));
-
-// ❌ Wrong — causes double fetch: once on server, once on client hydration
-const data = await $api("/users");
-```
-
-### 3. Anti-patterns to flag in code review
-
-```ts
-// 🚩 Double fetch — useFetch AND $fetch on same endpoint
-const { data } = useFetch("/api/orders");
-onMounted(async () => {
-  orders.value = await $fetch("/api/orders");
-});
-// Fix: remove onMounted, use refresh() from useFetch instead
-
-// 🚩 Raw $fetch without useAsyncData
-const data = await $fetch("/api/users");
-// Fix: const { data } = await useAsyncData('users', () => $fetch('/api/users'))
-
-// 🚩 Repeated auth headers across multiple useFetch calls
-useFetch("/api/x", { headers: { Authorization: `Bearer ${token}` } });
-useFetch("/api/y", { headers: { Authorization: `Bearer ${token}` } });
-// Fix: createUseFetch or useApiFetch composable
-```
-
----
-
-## Hydration — Common Issues & Fixes
-
-**Never ignore Vue hydration warnings.** They indicate broken interactivity, SEO issues, and forced full re-renders.
-
-| Problem                    | Wrong                             | Right                                                  |
-| -------------------------- | --------------------------------- | ------------------------------------------------------ |
-| Browser-only API           | `localStorage.getItem('theme')`   | `useCookie('theme', { default: () => 'light' })`       |
-| Inconsistent state         | `Math.random()` in template       | `useState('key', () => Math.random())`                 |
-| Client-only condition      | `v-if="window?.innerWidth > 768"` | CSS media queries or `<ClientOnly>`                    |
-| Time-based content         | `new Date().getHours()` in setup  | `<NuxtTime>` component or `onMounted` + `<ClientOnly>` |
-| Browser-only 3rd party lib | Init in `setup()`                 | Init in `onMounted()`                                  |
-
-```ts
-// 🚩 Hydration mismatch — localStorage doesn't exist on server
-const theme = localStorage.getItem("theme") || "light";
-
-// ✅ Fix — works on both server and client
-const theme = useCookie("theme", { default: () => "light" });
-```
-
----
-
-## Performance — Official Nuxt 4 Patterns
-
-### Lazy Loading & Lazy Hydration
-
-```html
-<!-- Lazy load: component JS only loaded when shown -->
-<LazyMountainsList v-if="show" />
-
-<!-- Lazy hydration: hydrate only when scrolled into view (Nuxt 4) -->
-<LazyMyHeavyWidget hydrate-on-visible />
-```
-
-### Hybrid Rendering via Route Rules
-
-```ts
-// nuxt.config.ts — per-route caching strategy
-export default defineNuxtConfig({
-  routeRules: {
-    "/": { prerender: true }, // Static HTML at build time
-    "/products/**": { swr: 3600 }, // Stale-while-revalidate, 1hr
-    "/blog": { isr: 3600 }, // Incremental static regen
-    "/admin/**": { ssr: false }, // SPA mode — no SSR
-  },
-});
-```
-
-### Always `<NuxtLink>`, Never `<a>`
-
-```html
-<!-- ✅ Smart prefetching, internal/external detection, optimised attributes -->
-<NuxtLink to="/about">About</NuxtLink>
-
-<!-- 🚩 Loses all Nuxt prefetching and optimisation -->
-<a href="/about">About</a>
-```
-
-### Vue Performance (Don't Forget — Nuxt IS Vue)
-
-```ts
-// shallowRef for large objects without deep reactivity needs
-const items = shallowRef<Item[]>([]);
-
-// v-memo for expensive list renders with stable keys
-// v-once for truly static content that never changes
-```
+1. Run `npx nuxi typecheck` -> capture output.
+2. Categorize errors in a NeuroForge file.
+3. For each error: analyze root cause — don't just add lazy type annotations.
+4. If root cause is unclear, **pause and ask the user**.
+5. Create or update `.types.ts` files as needed.
+6. Re-run `npx nuxi typecheck` to confirm resolution.
 
 ---
 
@@ -419,21 +141,18 @@ const items = shallowRef<Item[]>([]);
 - Small and focused — `useFetchCart`, `useAddToCart`, `useRemoveFromCart`; not a monolithic `useCart`
 - Move pure helpers OUTSIDE the composable function (prevents closure memory leaks)
 - Clean up: `onUnmounted` for listeners, timers, subscriptions
-- No business logic or side effects directly in components — always extract to composables
 
 ### Components (`<script setup lang="ts">`)
 
+- **Strict UI Casing, Structure & Tag Rules**: You MUST follow all Vue component formatting, naming, and nesting folder rules documented in [references/components.md]. This includes kebab-casing all Vue files and custom template tags, grouping prefixes in folders, and strictly ordering Vue tags (`<template>` first).
 - Strict `defineProps<{ ... }>()` and `defineEmits<{ ... }>()`
 - UI + minimal orchestration only; complex logic goes to composables
-- `Lazy` prefix for non-critical components; `hydrate-on-visible` for heavy below-fold content
-- No prop drilling — use composables, Pinia (global only), or events
 - Never use browser APIs in `setup()` — use `onMounted()`, `useCookie`, or `useState`
 
 ### Nitro Server Routes
 
 - `defineEventHandler` → validate → business logic (utils) → Prisma → typed response
 - `readBody<MyType>()` and `getQuery<MyType>()` always typed
-- `cachedEventHandler` for expensive/repeated ops
 - Thin routes — extract logic to `server/utils/`
 - Never expose raw Prisma errors to the client
 
@@ -487,6 +206,8 @@ If the codebase is clean, say so directly and confidently — don't invent probl
 
 ---
 
-## Reference Files
+## Reference Files Index
 
-- `references/patterns.md` — Copy-paste patterns: Prisma singleton, Nitro route skeleton, composable contract, Nuxt layer structure, `createUseFetch`, `$fetch` plugin, type file examples
+- **[references/patterns.md]** — Copy-paste patterns: Prisma singleton, Nitro route skeleton, composable contract, Nuxt layer structure, `createUseFetch`, `$fetch` plugin, type file examples.
+- **[references/components.md]** — Vue SFC ordering, kebab-case naming, folder/auto-import structures, prefix grouping, and Shadcn UI exception rules.
+- **[references/debugging.md]** — Diagnostic protocols, SSR vs Client contexts, structured logging rules, hydration mismatch tables, and Vue error boundaries.
