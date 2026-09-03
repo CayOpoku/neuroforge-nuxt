@@ -1,20 +1,95 @@
 # NeuroForge Tier 2 Protocol & Review Standards
 
-Load this only for **Tier 2** work (new feature, schema change, refactor >4 files, architecture/UX audit, project onboarding). Tier 0 and Tier 1 tasks must not create memory files.
+Load this for **Tier 2** work: a bare invocation with no task, a new feature, a schema change, a refactor >4 files, an architecture/UX audit, or project onboarding. Tier 0 and Tier 1 tasks must not create memory files.
 
 ---
 
-## 1. The Tier 2 memory cycle
+## 0. Entry point
+
+**Invoked with no task?** That is the full audit. Do not ask what the user wants — scan.
+
+1. Say `Activating NeuroForge analysis...` and nothing else.
+2. **Read `neuroforge/` before reading the codebase** — it is the record of what has already been decided and done. Section 1 covers how to inventory it.
+3. Scan the whole codebase: folder structure, `nuxt.config.ts`, layers, `app/` tree, `server/` routes, `prisma/schema.prisma`, composables, stores, and `package.json`.
+4. Write the analysis files in section 2.
+5. **Report what is actually wrong** — dead files, god components, duplicated logic, unvalidated boundaries, `any` escapes, unbounded queries, imperative reactivity, false fallbacks, hardcoded errors (the full list is in `smells.md`).
+6. **Report the `neuroforge/` folder status** — done, outstanding, and what to delete (section 1).
+7. Close with the Code Quality Verdict in section 6.
+8. Wait.
+
+The deliverable is the findings. An audit that produces memory files but names no problems has not run — if the codebase is genuinely clean, say so directly and score it accordingly, but say it after looking, not instead of looking.
+
+---
+
+## 1. Inventory `neuroforge/` — done, outstanding, delete
+
+Read the folder before you scan the codebase. It tells you what was already decided, so you do not re-derive it, and what was already fixed, so you do not report it as a finding again.
+
+### How to classify each file
+
+Do not trust a file's own claims. **Verify every recommendation against the current code** — that comparison is what makes a file "done":
+
+| Status | How you know |
+| :--- | :--- |
+| **Current** | Its recommendations are still unimplemented and still correct. |
+| **Done** | Everything it proposed now exists in the codebase. |
+| **Partially done** | Some recommendations landed, some did not. Name which. |
+| **Superseded** | A later file (`03-v2-…`) covers the same subject. |
+| **Stale** | It describes structure, files, or decisions the codebase no longer has. |
+| **Orphaned** | Its subject was abandoned, or the files it analysed are gone. |
+| **Misplaced** | It is not an analysis document at all — a `task.md`, `todo.md`, or any checklist file that should never have been written here. Always a delete candidate, whatever its contents. |
+
+`00-project-overview.md` is never any of these. It is permanent — never a prune candidate.
+
+If the inventory turns up a checklist file, say so plainly, recreate its unfinished items in the IDE's task artifact so nothing is lost, and put the file on the delete list.
+
+### Report it as a table
+
+```
+## NeuroForge Folder Status
+
+| File | Subject | Status | Action |
+| :--- | :--- | :--- | :--- |
+| 00-project-overview.md | Core memory | Permanent | Updated with 2 new models |
+| 01-project-analysis.md | Structure scan | Stale | Delete — describes the pre-`app/` layout |
+| 03-composable-strategy.md | Composables | Superseded by 03-v2 | Delete |
+| 03-v2-composable-strategy.md | Composables | Partially done | Keep — 2 of 5 splits still outstanding |
+| 05-potential-spaghetti-risks.md | Risk audit | Done | Delete — all 4 risks resolved |
+
+**Still outstanding:** [the specific unfinished items, pulled from the Current and Partially done rows]
+**Recommend deleting:** 01-project-analysis.md, 03-composable-strategy.md, 05-potential-spaghetti-risks.md
+```
+
+The **Still outstanding** line is the point of the whole exercise. Carry those items into the current task's analysis instead of rediscovering them.
+
+### Pruning rules
+
+- **Deleting is the only cleanup.** There is **no archiving in `neuroforge/`** — never create `neuroforge/archive/`, `neuroforge/old/`, or `neuroforge/done/`, never rename a file to `-old`/`-deprecated`, and never move a file aside instead of removing it. A folder of files nobody will read again is the bloat this system exists to prevent.
+- **Always propose, never act.** List the delete candidates with a one-line reason each and wait for explicit approval. Never delete a `neuroforge/` file unprompted.
+- Delete only what the user approves. If they approve some and not others, delete exactly those.
+- A superseded `v1` stays until its `v2` is confirmed correct — then it goes in the next prune, not into an archive.
+- If nothing is stale, say so in one line and move on. Do not manufacture prune candidates.
+
+---
+
+## 2. The Tier 2 memory cycle
 
 ### Step 1 — Prepare the memory layer
 - Create `neuroforge/` if absent.
 - Ensure `neuroforge/` is in `.gitignore`. If `.gitignore` is missing, create it. **Say in one line that you did this** — it modifies a tracked file, so it is announced, not silent.
 - `neuroforge/ui-reviews/` holds standalone HTML/MD mockups.
 - Automation, seed and one-off scripts go in `scripts/` or `test-scripts/`, never the repo root.
-- Task checklists go in the IDE's own task artifact (`task.md`), **not** inside `neuroforge/`.
+
+**`neuroforge/` is for analysis documents and nothing else.** It never contains a task list. Do not write `task.md`, `todo.md`, `checklist.md`, `plan.md`, or any other checklist file into it — not at the root of the folder, not in a subfolder, not under a different name.
+
+Task tracking goes in the **IDE's native task artifact**: Claude Code's todo list, Cursor's to-dos, Antigravity's task panel, or the equivalent in whatever editor is running. Create it there and **tell the user in one line where to find it**, so the checklist is visible without hunting for it.
+
+If the environment genuinely has no native task artifact, keep the checklist inline in your reply. Writing a checklist file is never the fallback — an analysis folder that fills up with to-do lists stops being a memory layer and becomes a second, worse task tracker.
 
 ### Step 2 — Read before writing
 Read `neuroforge/00-project-overview.md` first if it exists. It is the master record of architecture, models, env, and long-term decisions. **Update it incrementally; never overwrite it.** If it does not exist and this is an onboarding task, create it.
+
+Then inventory the rest of the folder per section 1 — what is done, what is outstanding, what should be deleted. Never write a new analysis file covering ground an existing one already covers; extend or supersede it instead.
 
 ### Step 3 — Write focused analysis files
 Create only the files the task actually needs — **match the count to the complexity, do not produce all five by reflex**:
@@ -34,9 +109,9 @@ Present the files. Write no implementation code until the user says "Proceed" or
 
 ---
 
-## 2. Non-negotiable rules
+## 3. Non-negotiable rules
 
-1. **Never delete or silently overwrite a `neuroforge/` file.** Supersede it with a version (`03-v2-composable-strategy.md`) and say what you did. Ask before pruning finished analysis files.
+1. **Never delete or silently overwrite a `neuroforge/` file on your own initiative.** Supersede it with a version (`03-v2-composable-strategy.md`) and say what you did. Propose prunes; delete only what the user approves. **Never archive** — no `archive/`, `old/` or `done/` subfolder, no `-old` rename. A file is current, or it is proposed for deletion. There is no third state.
    *This protects the memory layer only.* Deleting dead application code, stale files, or temporary `console.log` lines during an authorised refactor is expected — that is the Boy Scout rule, not a destructive action.
 2. **Protected files need explicit approval:** `.env`, `.env.*`, `.git/*`, `prisma/migrations/*`, `package-lock.json`, `pnpm-lock.yaml`, auth/secret config. Explain what and why, then wait.
 3. **No implementation before consent** on Tier 2.
@@ -48,7 +123,7 @@ Present the files. Write no implementation code until the user says "Proceed" or
 
 ---
 
-## 3. Context engineering guardrails
+## 4. Context engineering guardrails
 
 1. **Own the context window.** Keep memory files dense; strip noise. Never re-read a file already in context.
 2. **Tools are structured outputs.** Think `{ goal, constraints, options, chosen_path, rationale }`.
@@ -59,7 +134,7 @@ Present the files. Write no implementation code until the user says "Proceed" or
 
 ---
 
-## 4. Engineering standards that are actually enforced here
+## 5. Engineering standards that are actually enforced here
 
 Generic clean-code theory is assumed knowledge. These are the deltas this codebase holds you to:
 
@@ -79,7 +154,7 @@ Generic clean-code theory is assumed knowledge. These are the deltas this codeba
 
 ---
 
-## 5. Code review style
+## 6. Code review style
 
 Flag findings as: `Senior-level issue: <problem> → <exact fix>`
 

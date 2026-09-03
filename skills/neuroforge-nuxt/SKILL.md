@@ -21,7 +21,7 @@ This file is a **router**. It holds only what applies to every task. Everything 
 - **Reasoning budget:** concise, high-signal. No speculative tangents before tool calls.
 - **No overengineering:** propose the direct, boring, standard solution first. No speculative abstraction.
 - **Loop breaker:** if a build/test/terminal command fails twice, stop. Surface the exact root cause; do not attempt a third refactor.
-- **Minimal chat:** no greetings, no filler, no restating what you just did. Dense code and markdown only.
+- **Minimal chat:** no greetings, no filler, no restating what you just did. Dense code and markdown only. (Exception: the Tier 2 activation line below.)
 - **Root cause over patch:** never mask a symptom you have not explained.
 - **Declarative over imperative:** `computed` is the default. `watch`, `watchEffect`, `onMounted` and manual `onUnmounted` cleanup are side-effect escape hatches — reach for a VueUse composable first, and be able to say in one sentence why a watcher was necessary.
 - **Verify, never assume:** after a file operation, confirm the file exists with the expected content before reporting done.
@@ -30,23 +30,36 @@ This file is a **router**. It holds only what applies to every task. Everything 
 
 ## Triage gate — do this first
 
-Classify the request before doing anything else. Do not run heavier machinery than the task earns.
+### Bare invocation = full audit
+
+**If this skill is invoked with no task attached — no request, an empty prompt, just the skill name, or only a broad directive ("activate NeuroForge", "audit this", "review my codebase", "what's wrong with this project") — that is Tier 2 by definition. Run the full protocol immediately: open with `Activating NeuroForge analysis...`, scan the entire codebase, write the `neuroforge/` analysis files, surface the bad code, smells and architectural risks, and wait.**
+
+Do not answer a bare invocation with a question about what the user wants. Being invoked with nothing to do *is* the instruction: analyse everything. Ask nothing, scan first.
+
+### Otherwise, classify the request
+
+Do not run heavier machinery than the task earns.
 
 | Tier | Scope | Protocol |
 | :--- | :--- | :--- |
 | **0 — Execute now** | Answering a question about code; single-file edit; typo, rename, prop addition, removing a `console.log`, import fix, style tweak | No memory files, no plan, no approval. Just do it and report in one or two lines. |
 | **1 — Plan inline** | 2–4 files, no schema or architecture change (new component, new endpoint, focused refactor) | State the plan and target files **in chat** (no `neuroforge/` files). Proceed on approval. |
-| **2 — Full NeuroForge** | New feature, Prisma schema change, refactor spanning >4 files, architecture/UX audit, project onboarding | Run the full protocol in `references/workflow.md`. Memory files, then wait for "Proceed". |
+| **2 — Full NeuroForge** | **No task given**; new feature; Prisma schema change; refactor spanning >4 files; architecture/UX/type audit; project onboarding; "is this codebase any good" | Run the full protocol in `references/workflow.md`. Announce, scan, write memory files, then wait for "Proceed". |
 
-When genuinely ambiguous, state the tier you picked in one line and continue. Do not ask which tier.
+**Default to Tier 2 whenever the scope is unstated or unclear.** The tiers exist to stop a typo fix from costing an architecture review — not to talk you out of an audit the user asked for. A missing task is a request for the audit, not permission to do less.
+
+When the tier is genuinely borderline, state the one you picked in a single line and continue. Do not ask which tier.
+
+**Tier 2 opens with one line and nothing else:** `Activating NeuroForge analysis...` — then start scanning. It is the user's signal that the protocol engaged; it is not conversational filler, and the "minimal chat" rule does not apply to it.
 
 ## Non-negotiables
 
-1. **Never delete or overwrite anything in `neuroforge/`** — version it (`03-v2-...md`) and tell the user. Deleting *dead application code* during an authorised refactor is expected and encouraged; the two are different things.
+1. **Never delete or overwrite anything in `neuroforge/` on your own initiative** — version it (`03-v2-...md`) and tell the user. Propose prunes and delete only what the user approves. **Never archive a memory file** — no `archive/`/`old/`/`done/` subfolder, no `-old` rename. Current, or proposed for deletion; there is no third state. Deleting *dead application code* during an authorised refactor is expected and encouraged; the two are different things.
 2. **Never touch protected files without explicit approval:** `.env`, `.env.*`, `.git/*`, `prisma/migrations/*`, lockfiles, auth/secret config.
 3. **Tier 2 means no implementation code before "Proceed"/"Start coding".** No sneaking edits into an analysis turn.
 4. **`00-project-overview.md` is append/update-only.** Read it first on Tier 2; never overwrite it.
 5. **Compact errors:** root cause + impact + fix. Never dump raw stack traces.
+6. **`neuroforge/` holds analysis files only — never a task list.** Do not create `task.md`, `todo.md`, `checklist.md`, `plan.md`, or any other checklist file inside `neuroforge/`, at any nesting depth, under any name. Task tracking belongs in the **IDE's own native task artifact** — Claude Code's todo list, Cursor's to-dos, Antigravity's task panel, or the equivalent in whatever editor is running. Create the checklist there, then tell the user in one line where to look for it. If the environment has no native task artifact, keep the checklist inline in your reply — **writing a checklist file is never the fallback.**
 
 ## Nuxt 4 layout (all paths in this skill assume it)
 

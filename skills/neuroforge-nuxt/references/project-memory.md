@@ -17,7 +17,15 @@ Handoff specification: [skills.sh handoff standard](https://www.skills.sh/mattpo
 
 - Task-specific files (`01-project-analysis.md`, `02-architecture-decisions.md`, …) may be created or overwritten freely — they are scoped to the current task.
 - Create only the ones the task needs. Producing five files for a two-file change is the exact token waste this system exists to prevent.
-- Task checklists go in the IDE's own task artifact (`task.md`), **not** in `neuroforge/`.
+- **These are analysis documents.** They record findings, decisions, and rationale — never a checklist of steps to tick off.
+
+### No task files in `neuroforge/`
+
+Never create `task.md`, `todo.md`, `checklist.md`, `plan.md`, or any other checklist file inside `neuroforge/` — at any depth, under any name. This has gone wrong before; the folder is for analysis only.
+
+Task tracking belongs in the **IDE's native task artifact** — Claude Code's todo list, Cursor's to-dos, Antigravity's task panel, or the running editor's equivalent. Create the checklist there, then point the user to it in one line.
+
+No native task artifact available? Keep the checklist inline in the reply. A checklist file is never the fallback.
 
 ---
 
@@ -43,8 +51,16 @@ A handoff document:
 
 ---
 
-## 5. Pruning
+## 5. Pruning — delete, never archive
 
-`neuroforge/` accumulates finished plans, old UI reviews, and superseded audits.
+`neuroforge/` accumulates finished plans, old UI reviews, and superseded audits. Left alone it becomes the context bloat this system exists to prevent.
 
-**Always ask before pruning.** Never delete a memory file silently. When a file is superseded, version it (`03-v2-composable-strategy.md`) and leave the original in place until the user says otherwise.
+**Inventory it on every Tier 2 entry** (the classification table and report format are in `workflow.md` section 1): read each file, verify its recommendations against the current code, and mark it Current / Done / Partially done / Superseded / Stale / Orphaned. Report what is **still outstanding** — that is the part that earns the read — and list what should go.
+
+**There is no archiving.** Never create `neuroforge/archive/`, `neuroforge/old/`, or `neuroforge/done/`. Never rename a file to `-old` or `-deprecated`. Never move a file aside instead of deleting it. A memory file is either current or a delete candidate; a folder of files nobody will open again is bloat wearing a tidier name.
+
+**Always ask before deleting.** Propose the list with a one-line reason per file and wait for explicit approval. Delete exactly what the user approves, nothing more. Never delete a memory file silently.
+
+`00-project-overview.md` is permanent and is never a prune candidate.
+
+When a file is superseded, version it (`03-v2-composable-strategy.md`) and leave the original until the `v2` is confirmed correct — then it joins the next prune list.
