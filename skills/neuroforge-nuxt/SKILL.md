@@ -7,7 +7,9 @@ description: |
   Use this skill whenever working on Nuxt 4/Nitro/Prisma/Vue 3 projects - including writing components, composables, server routes,
   Prisma schemas, or architectural reviews. Trigger on any mention of Nuxt, Nitro, Prisma, useAsyncData, useFetch, defineEventHandler,
   PrismaClient, Nuxt Layers, createUseFetch, $fetch, useAPI, Pinia, Pinia Colada, useQuery, useMutation, zod, valibot, hydration mismatch,
-  Dexie, IndexedDB, liveQuery, offline-first, PWA persistence, or Vue script setup. Trigger this skill to activate the NeuroForge protocol and ensure your codebase is built to scalable production standards.
+  Dexie, IndexedDB, liveQuery, offline-first, PWA persistence, Strapi, Strapi 5, strapi::security, config/middlewares.ts, config/admin.ts,
+  contentTypes.d.ts, components.d.ts, Strapi preview, draft mode, content types, dynamic zones, useStrapi, useStrapiPage, block registry,
+  [...slug].vue, Nodemailer, SMTP, contact form, transactional email, PDF download, or Vue script setup. Trigger this skill to activate the NeuroForge protocol and ensure your codebase is built to scalable production standards.
 ---
 
 # NeuroForge Nuxt Protocol
@@ -44,7 +46,7 @@ Do not run heavier machinery than the task earns.
 | :--- | :--- | :--- |
 | **0 — Execute now** | Answering a question about code; single-file edit; typo, rename, prop addition, removing a `console.log`, import fix, style tweak | No memory files, no plan, no approval. Just do it and report in one or two lines. |
 | **1 — Plan inline** | 2–4 files, no schema or architecture change (new component, new endpoint, focused refactor) | State the plan and target files **in chat** (no `neuroforge/` files). Proceed on approval. |
-| **2 — Full NeuroForge** | **No task given**; new feature; Prisma schema change; refactor spanning >4 files; architecture/UX/type audit; project onboarding; "is this codebase any good" | Run the full protocol in `references/workflow.md`. Announce, scan, write memory files, then wait for "Proceed". |
+| **2 — Full NeuroForge** | **No task given**; new feature; Prisma or Strapi schema change; refactor spanning >4 files; architecture/UX/type audit; project onboarding; "is this codebase any good" | Run the full protocol in `references/workflow.md`. Announce, scan, write memory files, then wait for "Proceed". |
 
 **Default to Tier 2 whenever the scope is unstated or unclear.** The tiers exist to stop a typo fix from costing an architecture review — not to talk you out of an audit the user asked for. A missing task is a request for the audit, not permission to do less.
 
@@ -77,6 +79,9 @@ Default `srcDir` is `app/`. Client code lives in `app/` — `app/components/`, `
 | Writing types, fixing typecheck errors, deciding where a type lives | `references/type-safety.md` |
 | Writing a Nitro route, validating input, any `catch` block, toast, error UI | `references/backend-errors.md` |
 | Scaffolding: Prisma singleton, route skeleton, composable, layers, API client | `references/patterns.md` |
+| Strapi backend: `config/middlewares.ts` CSP, `config/admin.ts` preview handler, plugins, preview env keys, `contentTypes.d.ts` / `components.d.ts` regeneration, new content type | `references/strapi-backend.md` |
+| Nuxt consuming Strapi: single-type vs dynamic-zone pages, `blocks/` architecture, block registry, `[...slug].vue`, `useStrapiPage`, preview handshake route, CMS SEO | `references/strapi-nuxt.md` |
+| Sending mail (Nodemailer, Strapi email plugin), contact forms, campaigns, generating or serving PDFs and downloads | `references/email-pdf.md` |
 | Creating a layer, bloated `composables/`, where a file belongs, `features/` folders, auto-import config, cross-layer imports | `references/structure.md` |
 | Login, sessions, protecting a route, role checks | `references/auth-middleware.md` |
 | Hydration warning, SSR crash, `window is not defined`, debugging a runtime value | `references/debugging.md` |
