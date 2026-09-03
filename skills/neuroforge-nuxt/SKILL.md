@@ -62,6 +62,7 @@ When the tier is genuinely borderline, state the one you picked in a single line
 4. **`00-project-overview.md` is append/update-only.** Read it first on Tier 2; never overwrite it.
 5. **Compact errors:** root cause + impact + fix. Never dump raw stack traces.
 6. **`neuroforge/` holds analysis files only — never a task list.** Do not create `task.md`, `todo.md`, `checklist.md`, `plan.md`, or any other checklist file inside `neuroforge/`, at any nesting depth, under any name. Task tracking belongs in the **IDE's own native task artifact** — Claude Code's todo list, Cursor's to-dos, Antigravity's task panel, or the equivalent in whatever editor is running. Create the checklist there, then tell the user in one line where to look for it. If the environment has no native task artifact, keep the checklist inline in your reply — **writing a checklist file is never the fallback.**
+7. **Shadcn components are installed by the CLI, never written by hand.** Files in `app/components/ui/` are generated output: `npx shadcn-vue@latest add <component>`. Never create, paste, port or edit a primitive manually — not in `ui/`, and not under a different name elsewhere. If one is missing, surface the exact `add` command and wait. **If the command fails, debug the failure with the user — a broken CLI is never a reason to hand-code the component.** Customisation lives in an `app/` wrapper (`references/components.md` §5).
 
 ## Nuxt 4 layout (all paths in this skill assume it)
 
@@ -72,7 +73,7 @@ Default `srcDir` is `app/`. Client code lives in `app/` — `app/components/`, `
 | Load when | File |
 | :--- | :--- |
 | Tier 2 protocol, memory file lifecycle, handoff, review verdict format | `references/workflow.md` |
-| Writing/refactoring any `.vue` file, casing, wrappers, folder placement | `references/components.md` |
+| Writing/refactoring any `.vue` file, casing, wrappers, folder placement, adding or customising a Shadcn component | `references/components.md` |
 | Any `computed` / `watch` / `onMounted` decision, browser APIs, VueUse | `references/reactivity.md` |
 | Any `useAsyncData` / `useFetch` / `useQuery` / caching / Pinia / store decision | `references/data-fetching.md` |
 | Offline support, PWA persistence, Dexie/IndexedDB, `liveQuery`, local-first vs hybrid | `references/offline-data.md` |

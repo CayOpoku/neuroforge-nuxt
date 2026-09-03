@@ -106,16 +106,59 @@ app/components/
 
 Nuxt scans `components/` **recursively** by default, and the folder path becomes the tag prefix — so domain folders here are free and they genuinely namespace the component. This is the opposite of `composables/`, which is scanned one level deep and gets no namespace from its folder. See `structure.md` before applying component folder habits to composables.
 
-**Two hard rules for `ui/`:**
+**Three hard rules for `ui/`:**
 
 1. A new custom component never lands in `ui/`. Pick the domain folder that fits (`app/`, `form/`, `content/`, `datatable/`, …) and build on top of the primitive.
 2. Never edit a file inside `ui/`. If a change genuinely cannot be expressed in a wrapper, stop and tell the user which file needs it and why — do not edit it unprompted.
+3. Never *write* a file inside `ui/` by hand either. Primitives are installed with the Shadcn CLI and nothing else — see §5.
 
 Custom component files are named in kebab-case (`app-datatable.vue`, `form-otp.vue`), matching the kebab-case tags used in templates. Raw Shadcn primitives keep the casing the CLI generated.
 
 ---
 
-## 5. Component size and responsibility
+## 5. Shadcn primitives come from the CLI — never from your keyboard
+
+`app/components/ui/` is **generated output**. There is exactly one way a primitive enters this project:
+
+```bash
+npx shadcn-vue@latest add pagination
+npx shadcn-vue@latest add dialog table sheet   # several in one call
+```
+
+**Never hand-write a primitive, never paste one in from the docs, another project or memory, and never edit one in place.** "It is only a pagination component" is exactly the case this rule exists for.
+
+### Why the CLI is not optional
+
+- It installs the registry version matching this project's `components.json`, alias paths, Tailwind theme and `reka-ui` version. A hand-written file targets whatever the author remembered.
+- It pulls transitive primitives and npm dependencies (`pagination` brings `button`; `form` brings `vee-validate`).
+- It writes the exact upstream file, so `npx shadcn-vue@latest diff` and future upgrades keep working. A lookalike is a silent fork that drifts on the first upgrade and cannot be diffed.
+- Upstream primitives carry keyboard handling, focus management and ARIA wiring that a from-memory reproduction quietly drops (`performance-a11y.md`).
+
+### Procedure when a primitive is missing
+
+1. Look in `app/components/ui/` first — it may already be installed.
+2. If not, **surface the exact `npx shadcn-vue@latest add …` command and stop.** It changes dependencies, so the skill's standing rule applies: suggest the command, do not run it unprompted.
+3. Once the user has run it, build the `app/` wrapper (§3) on top and put every customisation there.
+
+Do not route around this with a copy under another name (`app/components/app/pagination.vue` containing hand-written primitive markup is the same violation). If the component genuinely is not in the `shadcn-vue` registry, say so explicitly — then it is a custom component, it goes in a domain folder, it is built on `reka-ui` primitives, and it still never lands in `ui/`.
+
+### When the `add` command fails
+
+**A failing CLI is a bug to fix, never a licence to hand-write the component.** There is no fallback path.
+
+Stop, report the exact error, and work the cause with the user:
+
+- No `components.json` → the project was never initialised: `npx shadcn-vue@latest init`.
+- Registry 404 / "component not found" → wrong name or wrong registry (check the exact slug; `radix-vue`-era names differ from `reka-ui`-era ones).
+- Alias or path errors → `components.json` aliases do not match the project's `tsconfig` paths / Nuxt 4 `app/` layout.
+- Network, proxy, registry or permission errors → an environment problem; retry or fix the environment.
+- Peer-dependency conflict → resolve the dependency, do not bypass the CLI.
+
+If it still will not run, hand the blocker back to the user with what you tried and what you believe the cause is. Leaving the component uninstalled is the correct outcome; a hand-written `ui/` file is not.
+
+---
+
+## 6. Component size and responsibility
 
 - Over ~200 lines, or mixing route orchestration with presentation: split it.
 - Template logic stays declarative. Anything past a ternary moves to a `computed`.
@@ -126,13 +169,13 @@ Custom component files are named in kebab-case (`app-datatable.vue`, `form-otp.v
 
 ---
 
-## 6. External templates (`templates/`)
+## 7. External templates (`templates/`)
 
 Never embed HTML email templates, PDF layouts, or large static data structures inside a Vue SFC or a Nitro handler. Store them in `templates/email/`, `templates/pdf/`, `templates/export/` and load them through a utility.
 
 ---
 
-## 7. Image placeholders
+## 8. Image placeholders
 
 ```html
 <img src="https://placehold.co/1500x1500" alt="Placeholder" class="h-full w-full object-cover" />

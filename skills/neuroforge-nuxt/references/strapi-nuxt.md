@@ -65,7 +65,7 @@ app/
 │   │           ├── index.vue
 │   │           └── index.config.ts
 │   ├── app/                         # Shadcn wrappers (components.md §3)
-│   └── ui/                          # Shadcn primitives — do not edit
+│   └── ui/                          # Shadcn primitives — CLI-generated; never edit or hand-write
 ├── pages/
 │   └── [...slug].vue                # orchestrator, resolves blocks
 ├── composables/
