@@ -24,9 +24,17 @@ npx skills add CayOpoku/neuroforge-nuxt
 
 ---
 
-## 🔥 The Workflow: Analysis Before Code
+## 🔥 The Workflow: Analysis Before Code — Scaled to the Task
 
-NeuroForge isn't a boilerplate; it's a **protocol**. Before writing a single line of code, the AI is forced to:
+NeuroForge isn't a boilerplate; it's a **protocol**. It triages the request first, so a typo fix does not pay for an architecture review:
+
+| Tier | Scope | What happens |
+| :--- | :--- | :--- |
+| **0** | A question, a typo, a rename, a single-file edit | Executed immediately. No memory files, no approval gate. |
+| **1** | 2–4 files, no schema or architecture change | Plan stated inline in chat, then built on approval. |
+| **2** | New feature, schema change, refactor >4 files, audit | Full protocol below. |
+
+For Tier 2, the AI is forced to:
 
 1.  **Scan**: Analyze the existing codebase, layers, and patterns.
 2.  **Document**: Create micro-memory files in `neuroforge/` (e.g., `01-project-analysis.md`, `02-architecture-decisions.md`).
@@ -62,7 +70,10 @@ Use these prompts to trigger the NeuroForge protocol in your project:
 NeuroForge ensures your AI agent follows these Nuxt 4 / Nitro patterns religiously:
 
 - **Type-Safe Everything**: Mandatory `.types.ts` files for logic > 5 lines. No inline god-interfaces.
-- **Data Fetching Excellence**: Strict usage of `createUseFetch` for API clients and `useAsyncData` to prevent SSR double-fetching.
+- **Data Fetching Excellence**: `createUseFetch` for API clients, `useAsyncData` to prevent SSR double-fetching, and **Pinia Colada** (`useQuery` / `useMutation`) once reads and writes need a shared cache with real invalidation.
+- **Validated Server Contracts**: Every Nitro boundary parsed with a zod/valibot schema shared between the form and the route — `readBody<T>()` is a cast, not a check.
+- **Authorisation by Session**: Queries scoped by the session user, never by a client-supplied id. Tenant scoping enforced in every `where`.
+- **Accessibility & Performance**: Keyboard operability, focus management and contrast treated as part of the design; lazy hydration, `<nuxt-img>` and mandatory pagination as part of shipping.
 - **Hydration Safety**: Automatic detection of `window`/`document` usage and non-deterministic state causes.
 - **Prisma Singleton**: Ensures database connections are managed correctly for HMR and production.
 - **Nitro Skeletons**: Clean, typed event handlers with standardized error responses.

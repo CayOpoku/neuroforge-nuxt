@@ -2,44 +2,66 @@
 
 ---
 
-## 1. Dormant Files Smell
+## 1. Dormant files
 
-- Codebases frequently accumulate orphaned components, unused composables, dead utility functions, and outdated config files that serve no purpose.
-- **Rule**: During initial NeuroForge analysis (`01-project-analysis.md` / `05-potential-spaghetti-risks.md`), actively audit for dormant files and point them out to the user with recommendations for removal.
+Codebases accumulate orphaned components, unused composables, dead utilities and stale config. During a Tier 2 analysis (`01-project-analysis.md` / `05-potential-spaghetti-risks.md`), audit for them and list them with a recommendation.
 
----
-
-## 2. Zero Legacy Patches in Development
-
-- **No Quick Hacks / Legacy Patches**: When building in development with zero live production users, do NOT apply quick legacy patches, Band-Aids, or temporary workarounds to satisfy flawed backend contracts or bad component structures.
-- **Rule**: Always recommend clean, scalable, airtight solutions first. If a backend change is needed, inform the user clearly so they can update the backend API rather than polluting the frontend codebase.
+Deleting dead application code during an authorised refactor is expected — that is the Boy Scout rule. The never-delete rule protects `neuroforge/` memory files, not source. Say what you removed and why.
 
 ---
 
-## 3. Strict Environment Variable Auditing
+## 2. No legacy patches in development
 
-- **No Hardcoded Env Secrets**: Hardcoded API keys, URLs, or secrets in source code are critical security and architectural red flags.
-- **Rely Less on Fallbacks**: Avoid hiding missing env variables behind silent inline fallback strings (e.g. `process.env.API_URL || 'http://localhost:3000'`).
-- **Rule**: If mandatory environment variables are missing, throw a descriptive error during runtime/startup to force proper environment configuration:
+With zero live users, a temporary frontend workaround for a flawed backend contract is pure debt with no upside. Do not write one.
+
+Recommend the clean fix. If the correct change is a backend change, say so plainly and specifically — which endpoint, which field, what shape it should return — so the user can act on it rather than absorbing the defect into the frontend.
+
+---
+
+## 3. Environment variables
+
+- **No hardcoded secrets.** API keys, tokens, or environment-specific URLs in source are a critical finding, not a nit.
+- **No silent fallbacks for mandatory values.** `process.env.API_URL || 'http://localhost:3000'` turns a misconfigured production deploy into a silent failure that points at localhost.
+- **Fail loudly at startup** for anything mandatory:
 
 ```ts
 // server/utils/env.ts
-export function useRequiredEnv(key: string): string {
-  const val = process.env[key] || useRuntimeConfig()[key];
-  if (!val) {
-    throw new Error(`[CRITICAL ENV MISSING] Mandatory environment variable '${key}' is not set.`);
+export function requiredEnv(key: string): string {
+  const value = process.env[key]
+  if (!value) {
+    throw new Error(`[CONFIG] Mandatory environment variable '${key}' is not set.`)
   }
-  return val;
+  return value
 }
 ```
 
+Named `requiredEnv`, not `useRequiredEnv` — the `use` prefix is reserved for composables, and this is a server utility.
+
+Note it reads `process.env` directly and does **not** touch `useRuntimeConfig()`. Runtime config is nested (`{ public: { ... } }`), so a flat `useRuntimeConfig()[key]` lookup silently misses every nested key and returns `undefined` — a fallback that never fires. Where runtime config is the right source, read the typed path explicitly:
+
+```ts
+const config = useRuntimeConfig(event)
+if (!config.stripeSecretKey) {
+  throw createError({ statusCode: 500, statusMessage: 'Payment provider is not configured' })
+}
+```
+
+Optional values with a sensible default are fine — the rule targets values whose absence breaks the app.
+
 ---
 
-## 4. Summary of Code Smells to Flag in NeuroForge Analysis
+## 4. Smells to flag in an audit
 
-1. **Dormant Files**: Unused files cluttering directories.
-2. **Hardcoded Secrets & Silenced Env Vars**: Inline secrets or silent fallbacks for missing env keys.
-3. **Legacy Patch Smells**: Temporary frontend hacks to bypass backend defects.
-4. **False Fallback Smells**: Frontend state defaults hiding backend errors.
-5. **Generic Error Message Smells**: Hardcoded strings like `"Something went wrong"` instead of rendering backend API responses.
-6. **God Component Smells**: Components exceeding 200 lines or mixing page routing logic with visual presentation.
+1. **Dormant files** — unused components, composables, utilities.
+2. **Hardcoded secrets or silenced env vars** — inline keys, or fallbacks masking missing config.
+3. **Legacy patches** — frontend hacks compensating for backend defects.
+4. **False fallbacks** — UI defaults hiding a failed request (`backend-errors.md`).
+5. **Generic error strings** — `"Something went wrong"` where a backend message exists.
+6. **God components** — over ~200 lines, or mixing routing with presentation.
+7. **Unbounded queries** — a `findMany` with no `take`, or a table with no pagination.
+8. **Unvalidated boundaries** — `readBody<T>()` with no schema parse.
+9. **Client-trusted ids** — a query scoped by a request parameter instead of the session.
+10. **`any` escapes** — including implicit ones from an untyped `catch` or `JSON.parse`.
+11. **Duplicated Shadcn blocks** — the same primitive markup pasted across pages instead of an `app-*` wrapper.
+12. **Orphaned state** — a Pinia store holding server data that a query layer should own.
+13. **Imperative reactivity** — a `watch` writing to a ref that should be a `computed`, a `watch` calling `refresh()`, data fetched in `onMounted`, or hand-rolled listener/timer cleanup where VueUse would self-dispose (`reactivity.md`).

@@ -17,7 +17,15 @@ When investigating bugs, unexpected behaviors, or data flow issues:
 - **Primary Lint Command**: Use `npm run lint` as the primary linting and static audit command. Check if a `"lint"` script exists in `package.json`; if missing, create one (e.g. `"lint": "eslint ."` or `"lint": "nuxi typecheck"`).
 - **`npx nuxi typecheck`**: Use `npx nuxi typecheck` when specific type safety verification is needed, but default to `npm run lint`.
 - **Inform User Before Running Checks**: Always notify and request permission from the user before executing `npm run lint` or `npx nuxi typecheck`.
-- **Zero `any` Policy**: Never use `any` as a type escape hatch. All code must have proper, explicit type definitions.
+- **Zero `any` Policy**: Never use `any` as a type escape hatch. Use `unknown` and narrow it — see `type-safety.md`.
+
+### Reading a hydration warning
+
+Vue reports the *symptom node*, not the cause. Work backwards:
+1. Note the mismatched element in the console warning.
+2. Find what feeds it — a prop, a `computed`, a store value.
+3. Ask what could differ between server and client for that value: time, randomness, `window`, `localStorage`, a locale-dependent format, or a value the server never had.
+4. Fix the source with the table in section 5. Never silence the symptom by wrapping the node in `<ClientOnly>` — that trades a warning for a blank flash and a lost SSR payload.
 
 ---
 
@@ -70,7 +78,6 @@ Never ignore Vue hydration warnings. Mismatches degrade SEO, disable interactivi
 | **Client-only condition** | `v-if="window?.innerWidth > 768"` | CSS media queries or `<ClientOnly>` |
 | **Time-based content** | `new Date().getHours()` in setup | `<NuxtTime>` component or `onMounted` + `<ClientOnly>` |
 | **Browser-only 3rd party lib** | Init in `setup()` | Init in `onMounted()` |
-```
 
 ---
 

@@ -1,100 +1,134 @@
-# Vue Component Casing, Folder Structures & Reusability Rules
+# Vue Component Structure, Casing & Reusability
 
-Use this reference whenever building, modifying, or refactoring Vue components in Nuxt 4.
+Paths assume the Nuxt 4 default `srcDir: 'app/'`.
 
 ---
 
-## 1. Single File Component (SFC) Tag Order
+## 1. Styling: Tailwind is the house style
 
-Every Vue component file MUST follow a strict parent tag hierarchy. The `<template>` tag must always go first to prioritize layout readability, followed by TypeScript script setup, and ending with styling:
+This stack is Tailwind + Shadcn. **Style with utility classes in the template.** Do not add a `<style scoped>` block by default — a component with both utilities and scoped CSS forces the next reader to check two places for every visual rule.
 
-```html
-<!-- 1. Template tag first -->
+`<style scoped>` is justified only for things utilities genuinely cannot express: keyframe animations, complex `::before`/`::after` art, third-party widget overrides. When you use it, say why in a one-line comment.
+
+Design tokens live in the Tailwind theme and the Shadcn CSS variables — never hardcode a hex value in a component.
+
+---
+
+## 2. SFC tag order
+
+`<template>` first, then `<script setup>`, then `<style>` if it exists. Layout reads first.
+
+```vue
 <template>
-  <div class="card-wrapper">
-    <h2 class="title">{{ title }}</h2>
-    <!-- Standard tags & custom tags in kebab-case -->
-    <app-button @click="submit">
-      Submit Entry
-    </app-button>
-    
-    <!-- Exception: Raw Shadcn UI primitives remain PascalCase when inside wrappers -->
+  <div class="rounded-lg border border-border bg-card p-6">
+    <h2 class="text-xl font-semibold text-card-foreground">{{ title }}</h2>
+
+    <!-- Project components in kebab-case -->
+    <app-button @click="submit">Submit entry</app-button>
+
+    <!-- Exception: raw Shadcn primitives stay PascalCase -->
     <Dialog>
       <DialogContent>Confirm submission?</DialogContent>
     </Dialog>
   </div>
 </template>
 
-<!-- 2. Script setup second -->
 <script setup lang="ts">
 defineProps<{ title: string }>()
-const emit = defineEmits<{ (e: 'submit'): void }>()
-const submit = () => emit('submit')
+
+const emit = defineEmits<{ submit: [] }>()
+
+function submit() {
+  emit('submit')
+}
 </script>
-
-<!-- 3. Style tag third (vanilla CSS scoped) -->
-<style scoped>
-.card-wrapper {
-  padding: 1.5rem;
-  background-color: var(--color-slate-900);
-  border-radius: 0.5rem;
-}
-.title {
-  font-size: 1.25rem;
-  font-weight: bold;
-}
-</style>
 ```
 
----
+**Configure ESLint to match**, or `npm run lint` will fight this on every file. The default `vue/component-tags-order` expects script first:
 
-## 2. Scalable Shadcn UI Wrapper Strategy (`components/app/`)
-
-### Write Once, Use Everywhere
-Instead of copying and pasting dozens of lines of raw Shadcn UI primitives into individual page files (making customization, styling consistency, and updates difficult):
-
-- **Build Reusable Wrappers**: Create custom application wrapper components inside `components/app/` (e.g. `components/app/button.vue`, `components/app/dialog.vue`, `components/app/input.vue`, `components/app/datatable.vue`).
-- **Auto-Import Names**: Placing them in `components/app/` automatically generates clean, conflict-free auto-import tags:
-  - `<app-button>`
-  - `<app-dialog>`
-  - `<app-input>`
-  - `<app-datatable>`
-- **Pass Props & Slots**: Expose flexible props, variants, sizes, and slots on the `app-*` wrapper while hiding repetitive internal Shadcn markup.
-- **Project Component Check**: Before writing any new UI element in a page, always inspect `components/app/` or existing component folders to re-use established project components.
-
----
-
-## 3. Component Naming & Directory Organization
-
-### Domain-Driven Naming (Not Bounded by Pages)
-Never name or structure components after specific pages or routes (e.g. `home-hero.vue`, `about-card.vue`). Instead, organize components by domain/feature capabilities:
-
-```
-components/
-  app/           → Reusable app wrappers (<app-button />, <app-dialog />, <app-datatable />)
-  ui/            → Raw Shadcn UI primitives ONLY (never put custom components here)
-  content/       → Content display widgets (<content-card />, <content-list />)
-  form/          → Form input components (<form-otp />, <form-select />)
-  datatable/     → Table cells and filters (<datatable-filter />, <datatable-pagination />)
+```js
+// eslint.config.mjs
+export default withNuxt({
+  rules: {
+    'vue/block-order': ['error', { order: ['template', 'script', 'style'] }],
+  },
+})
 ```
 
----
-
-## 4. External Templates Directory (`templates/`)
-
-Never embed raw HTML email templates, complex static data structures, or PDF download layouts directly inside Vue component files or Nitro handlers:
-
-- **Create `templates/` Folder**: Store HTML/mustache templates in `templates/email/`, `templates/pdf/`, or `templates/export/`.
-- **Import into Vue / Nitro**: Load and compile template files using utility functions or file readers.
+If the project has already standardised on script-first, **follow the project** and drop this rule. Consistency beats preference; what matters is that the linter and the skill agree.
 
 ---
 
-## 5. Image Placeholder Standards
+## 3. Reusable Shadcn wrappers (`app/components/app/`)
 
-Whenever adding image placeholders to component templates, mockups, or UI layouts:
-- Use standard placehold.co images with responsive CSS classes:
-  ```html
-  <img src="https://placehold.co/1500x1500" alt="Placeholder" class="w-full h-full object-cover" />
-  ```
-- Adjust dimensions in the URL as needed (e.g. `https://placehold.co/600x400`, `https://placehold.co/150x150`) matching the container aspect ratio.
-- Never use broken local relative paths or missing asset references for UI placeholders.
+### Write once, use everywhere
+Never paste twenty lines of raw Shadcn primitives into a page. Wrap them:
+
+- `app/components/app/button.vue` → `<app-button>`
+- `app/components/app/dialog.vue` → `<app-dialog>`
+- `app/components/app/input.vue` → `<app-input>`
+- `app/components/app/datatable.vue` → `<app-datatable>`
+
+The folder name becomes the auto-import prefix, so placement alone gives you clean, conflict-free tags.
+
+Expose props, variants, sizes and slots on the wrapper; hide the repetitive internal markup. Forward attributes so consumers can still reach the underlying element:
+
+```vue
+<script setup lang="ts">
+defineOptions({ inheritAttrs: false })
+
+withDefaults(defineProps<{
+  variant?: 'default' | 'destructive' | 'outline'
+  size?: 'sm' | 'default' | 'lg'
+  loading?: boolean
+}>(), { variant: 'default', size: 'default', loading: false })
+</script>
+```
+
+**Before writing any new UI element, inspect `app/components/app/` first.** Reuse beats a second wrapper for the same primitive.
+
+---
+
+## 4. Folder organisation
+
+Domain-driven, never page-bound. `home-hero.vue` and `about-card.vue` are the wrong shape — the moment a second page needs them, the name lies.
+
+```
+app/components/
+  app/          -> reusable wrappers (<app-button>, <app-dialog>, <app-datatable>)
+  ui/           -> raw Shadcn primitives ONLY; never put custom components here
+  content/      -> content display widgets (<content-card>, <content-list>)
+  form/         -> form inputs (<form-otp>, <form-select>)
+  datatable/    -> table cells and filters (<datatable-filter>, <datatable-pagination>)
+```
+
+`ui/` is generated by the Shadcn CLI. Editing files there means the next `shadcn add` overwrites your work — extend via `app/` wrappers instead.
+
+---
+
+## 5. Component size and responsibility
+
+- Over ~200 lines, or mixing route orchestration with presentation: split it.
+- Template logic stays declarative. Anything past a ternary moves to a `computed`.
+- **Count the watchers.** A component with several `watch` blocks or an `onMounted` doing setup work is usually holding state it should be deriving — see `reactivity.md`.
+- Data fetching and business rules live in composables; the component renders and emits.
+- More than ~7 props usually means two components, or one that should take an object.
+- Prop drilling past two levels: use `provide`/`inject` or a store.
+
+---
+
+## 6. External templates (`templates/`)
+
+Never embed HTML email templates, PDF layouts, or large static data structures inside a Vue SFC or a Nitro handler. Store them in `templates/email/`, `templates/pdf/`, `templates/export/` and load them through a utility.
+
+---
+
+## 7. Image placeholders
+
+```html
+<img src="https://placehold.co/1500x1500" alt="Placeholder" class="h-full w-full object-cover" />
+```
+
+Match the URL dimensions to the container's aspect ratio. Never leave a broken relative path in a mockup.
+
+Placeholders are for drafts only — they are an external request that fails offline and under a strict CSP. Replace them with `<nuxt-img>` and real assets before shipping (see `performance-a11y.md`).
