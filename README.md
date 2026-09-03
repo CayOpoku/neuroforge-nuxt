@@ -1,8 +1,8 @@
 # 🛡️ NeuroForge Nuxt
 
-### The "Senior Engineer" External Brain for AI-Native Development.
+### The External Brain Protocol for AI-Native Development.
 
-**NeuroForge Nuxt** is a cognitive engineering system designed to transform AI agents from "slop generators" into disciplined Senior Full-Stack Engineers. It enforces an **Analysis-First** workflow by externalizing an agent's reasoning into a persistent memory layer (`neuroforge/`), ensuring production-ready architecture for Nuxt 4, Nitro, Prisma, and TypeScript.
+**NeuroForge Nuxt** is a cognitive engineering system designed to enforce disciplined, high-quality development. It enforces an **Analysis-First** workflow by externalizing an agent's reasoning into a persistent memory layer (`neuroforge/`), ensuring production-ready architecture for Nuxt 4, Nitro, Prisma, and TypeScript.
 
 ---
 
@@ -30,7 +30,7 @@ NeuroForge isn't a boilerplate; it's a **protocol**. Before writing a single lin
 
 1.  **Scan**: Analyze the existing codebase, layers, and patterns.
 2.  **Document**: Create micro-memory files in `neuroforge/` (e.g., `01-project-analysis.md`, `02-architecture-decisions.md`).
-3.  **Reason**: Apply **10+ years of Senior SaaS standards** (Single Responsibility, DRY, Type Safety).
+3.  **Reason**: Apply **scalable SaaS engineering standards** (Single Responsibility, DRY, Type Safety).
 4.  **Wait**: Present the plan for human review before proceeding.
 
 ---

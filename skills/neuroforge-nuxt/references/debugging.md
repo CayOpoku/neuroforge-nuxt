@@ -1,13 +1,31 @@
-# SSR, Client Casing, Hydration & Diagnostics Protocol
+# SSR, Diagnostics, Logging & Debugging Protocol
 
 Use this reference to diagnose runtime issues, design logs, and address hydration mismatches.
 
 ---
 
-## 1. SSR / Client Context Rules
+## 1. Console Log Debugging Workflow
+
+When investigating bugs, unexpected behaviors, or data flow issues:
+1. **Lean on `console.log` Diagnostics**: Instead of burning context tokens guessing solutions or making speculative changes, insert targeted `console.log` statements to observe actual runtime values and execution paths.
+2. **Clean Up Log Statements**: Once the root cause is identified and resolved, remove temporary debugging `console.log` calls to maintain clean code.
+
+---
+
+## 2. Explicit Confirmation for Diagnostics & Linting Commands
+
+- **Primary Lint Command**: Use `npm run lint` as the primary linting and static audit command. Check if a `"lint"` script exists in `package.json`; if missing, create one (e.g. `"lint": "eslint ."` or `"lint": "nuxi typecheck"`).
+- **`npx nuxi typecheck`**: Use `npx nuxi typecheck` when specific type safety verification is needed, but default to `npm run lint`.
+- **Inform User Before Running Checks**: Always notify and request permission from the user before executing `npm run lint` or `npx nuxi typecheck`.
+- **Zero `any` Policy**: Never use `any` as a type escape hatch. All code must have proper, explicit type definitions.
+
+---
+
+## 3. SSR / Client Context Rules
+
 Before fixing any runtime error or using a browser API, verify the execution environment:
-*   `import.meta.server` — Nitro/SSR context (no `window`, `document`, or `localStorage`).
-*   `import.meta.client` — Browser execution only.
+* `import.meta.server` — Nitro/SSR context (no `window`, `document`, or `localStorage`).
+* `import.meta.client` — Browser execution only.
 
 Always prefix your logs so they can be easily filtered in terminal logs:
 ```ts
@@ -17,7 +35,8 @@ console.log(`${prefix} User State:`, user.value);
 
 ---
 
-## 2. Structured Logging Rules (Agent-Optimised)
+## 4. Structured Logging Rules (Agent-Optimised)
+
 Always use labelled, structured logs for instant searchability and grepping:
 ```ts
 // ❌ BAD - Bare output, hard to scan
@@ -40,7 +59,8 @@ console.timeEnd('fetch-orders')
 
 ---
 
-## 3. Hydration Mismatch Protocol
+## 5. Hydration Mismatch Protocol
+
 Never ignore Vue hydration warnings. Mismatches degrade SEO, disable interactivity, and force full re-renders.
 
 | Problem | Wrong | Right |
@@ -50,10 +70,11 @@ Never ignore Vue hydration warnings. Mismatches degrade SEO, disable interactivi
 | **Client-only condition** | `v-if="window?.innerWidth > 768"` | CSS media queries or `<ClientOnly>` |
 | **Time-based content** | `new Date().getHours()` in setup | `<NuxtTime>` component or `onMounted` + `<ClientOnly>` |
 | **Browser-only 3rd party lib** | Init in `setup()` | Init in `onMounted()` |
+```
 
 ---
 
-## 4. Error Handling & Boundaries
+## 6. Error Handling & Boundaries
 
 ### API Routes (Nitro)
 ```ts

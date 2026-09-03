@@ -1,4 +1,4 @@
-# Vue Component Casing, Folder Structures & Organization Rules
+# Vue Component Casing, Folder Structures & Reusability Rules
 
 Use this reference whenever building, modifying, or refactoring Vue components in Nuxt 4.
 
@@ -14,11 +14,11 @@ Every Vue component file MUST follow a strict parent tag hierarchy. The `<templa
   <div class="card-wrapper">
     <h2 class="title">{{ title }}</h2>
     <!-- Standard tags & custom tags in kebab-case -->
-    <base-button @click="submit">
+    <app-button @click="submit">
       Submit Entry
-    </base-button>
+    </app-button>
     
-    <!-- Exception: Shadcn UI tags remain PascalCase -->
+    <!-- Exception: Raw Shadcn UI primitives remain PascalCase when inside wrappers -->
     <Dialog>
       <DialogContent>Confirm submission?</DialogContent>
     </Dialog>
@@ -48,55 +48,53 @@ const submit = () => emit('submit')
 
 ---
 
-## 2. Naming & Casing Conventions
+## 2. Scalable Shadcn UI Wrapper Strategy (`components/app/`)
 
-### File Naming
-*   All Vue Single File Component (`.vue`) file names MUST be written in **`kebab-case`** (e.g. `user-card.vue`, `order-status-badge.vue`).
-*   Never use `PascalCase` or `camelCase` for Vue component files.
+### Write Once, Use Everywhere
+Instead of copying and pasting dozens of lines of raw Shadcn UI primitives into individual page files (making customization, styling consistency, and updates difficult):
 
-### Component Tags
-*   All standard HTML tags and custom component tags inside a `<template>` MUST be written in **`kebab-case`** (e.g., `<user-card />`, `<base-button />`).
-*   **Exception**: **Shadcn UI components** (e.g. `<Button />`, `<Dialog />`, `<FormItem />`, `<FormLabel />`) are permitted to remain in **`PascalCase`** to stay consistent with standard Shadcn UI conventions.
-
----
-
-## 3. Nuxt Component Folder Structure & Auto-Imports
-
-Nuxt auto-imports components by resolving their nested directories, concatenating directory names to form the component name. 
-
-### Avoid Redundant Filenames
-Never repeat the directory name inside the filename. 
-
-*   **❌ BAD Structure**:
-    *   `components/example/example-form.vue`
-    *   *Resulting Auto-Import tag*: `<example-example-form />` or custom override. (Redundant and cluttered).
-*   **✅ GOOD Structure**:
-    *   `components/example/form.vue`
-    *   *Resulting Auto-Import tag*: `<example-form />` (Clean, intuitive, and leverages Nuxt's auto-import perfectly).
-
-### Shadcn UI Custom Folder Rule
-*   Custom developed components **must never** be placed in the `components/ui/` folder. 
-*   Keep `components/ui/` strictly reserved for un-customized Shadcn UI primitives. Put custom components in feature-sliced directories.
+- **Build Reusable Wrappers**: Create custom application wrapper components inside `components/app/` (e.g. `components/app/button.vue`, `components/app/dialog.vue`, `components/app/input.vue`, `components/app/datatable.vue`).
+- **Auto-Import Names**: Placing them in `components/app/` automatically generates clean, conflict-free auto-import tags:
+  - `<app-button>`
+  - `<app-dialog>`
+  - `<app-input>`
+  - `<app-datatable>`
+- **Pass Props & Slots**: Expose flexible props, variants, sizes, and slots on the `app-*` wrapper while hiding repetitive internal Shadcn markup.
+- **Project Component Check**: Before writing any new UI element in a page, always inspect `components/app/` or existing component folders to re-use established project components.
 
 ---
 
-## 4. Prefix Folder Grouping Strategy
+## 3. Component Naming & Directory Organization
 
-When multiple files would share a starting prefix name, they should be grouped into a directory named after that prefix rather than kept flat.
+### Domain-Driven Naming (Not Bounded by Pages)
+Never name or structure components after specific pages or routes (e.g. `home-hero.vue`, `about-card.vue`). Instead, organize components by domain/feature capabilities:
 
-*   **❌ BAD (Flat Prefix)**:
-    ```
-    components/
-      form-otp.vue
-      form-input.vue
-      form-select.vue
-    ```
-*   **✅ GOOD (Prefix Folder Grouped)**:
-    ```
-    components/
-      form/
-        otp.vue     → auto-imported as <form-otp />
-        input.vue   → auto-imported as <form-input />
-        select.vue  → auto-imported as <form-select />
-    ```
-    *This organizes your directories visually while generating the exact same clean component tags in templates.*
+```
+components/
+  app/           → Reusable app wrappers (<app-button />, <app-dialog />, <app-datatable />)
+  ui/            → Raw Shadcn UI primitives ONLY (never put custom components here)
+  content/       → Content display widgets (<content-card />, <content-list />)
+  form/          → Form input components (<form-otp />, <form-select />)
+  datatable/     → Table cells and filters (<datatable-filter />, <datatable-pagination />)
+```
+
+---
+
+## 4. External Templates Directory (`templates/`)
+
+Never embed raw HTML email templates, complex static data structures, or PDF download layouts directly inside Vue component files or Nitro handlers:
+
+- **Create `templates/` Folder**: Store HTML/mustache templates in `templates/email/`, `templates/pdf/`, or `templates/export/`.
+- **Import into Vue / Nitro**: Load and compile template files using utility functions or file readers.
+
+---
+
+## 5. Image Placeholder Standards
+
+Whenever adding image placeholders to component templates, mockups, or UI layouts:
+- Use standard placehold.co images with responsive CSS classes:
+  ```html
+  <img src="https://placehold.co/1500x1500" alt="Placeholder" class="w-full h-full object-cover" />
+  ```
+- Adjust dimensions in the URL as needed (e.g. `https://placehold.co/600x400`, `https://placehold.co/150x150`) matching the container aspect ratio.
+- Never use broken local relative paths or missing asset references for UI placeholders.
