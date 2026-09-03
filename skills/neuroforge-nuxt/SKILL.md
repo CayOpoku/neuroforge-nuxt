@@ -77,6 +77,7 @@ Default `srcDir` is `app/`. Client code lives in `app/` — `app/components/`, `
 | Writing types, fixing typecheck errors, deciding where a type lives | `references/type-safety.md` |
 | Writing a Nitro route, validating input, any `catch` block, toast, error UI | `references/backend-errors.md` |
 | Scaffolding: Prisma singleton, route skeleton, composable, layers, API client | `references/patterns.md` |
+| Creating a layer, bloated `composables/`, where a file belongs, `features/` folders, auto-import config, cross-layer imports | `references/structure.md` |
 | Login, sessions, protecting a route, role checks | `references/auth-middleware.md` |
 | Hydration warning, SSR crash, `window is not defined`, debugging a runtime value | `references/debugging.md` |
 | Images, slow page, bundle size, accessibility, SEO meta | `references/performance-a11y.md` |

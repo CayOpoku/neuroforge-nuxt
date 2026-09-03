@@ -234,23 +234,28 @@ export default defineNuxtConfig({
 
 ## 9. Nuxt layer structure
 
+Default shape — macro-layers by **audience**, not by feature:
+
 ```
 layers/
-  shared/
+  base/
     app/composables/
     app/components/
     shared/types/
   auth/
     app/composables/
-    app/components/
     app/middleware/
     server/api/
     server/utils/
-  products/
-    app/components/
-    server/api/
-    server/utils/
+  client/
+    app/pages/
+    app/features/
+  admin/
+    app/pages/
+    app/features/
 nuxt.config.ts   <- root orchestrator only; never feature logic
 ```
 
-Reach for layers when a domain has its own routes, server code, and components and is genuinely separable. Two folders and a shared button do not need a layer — YAGNI applies to architecture too.
+Two folders and a shared button do not need a layer — YAGNI applies to architecture too.
+
+**Before scaffolding this, read `structure.md`.** It carries the decision rules this tree does not show: when a layer is the wrong answer, the alphabetical priority trap that makes `base` override `admin`, the ban on sibling layers importing from each other, and the flat-folder defaults that apply to most projects.

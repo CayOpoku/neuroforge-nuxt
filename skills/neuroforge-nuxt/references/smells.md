@@ -65,3 +65,5 @@ Optional values with a sensible default are fine — the rule targets values who
 11. **Duplicated Shadcn blocks** — the same primitive markup pasted across pages instead of an `app-*` wrapper.
 12. **Orphaned state** — a Pinia store holding server data that a query layer should own.
 13. **Imperative reactivity** — a `watch` writing to a ref that should be a `computed`, a `watch` calling `refresh()`, data fetched in `onMounted`, or hand-rolled listener/timer cleanup where VueUse would self-dispose (`reactivity.md`).
+14. **Misfiled composables** — `composables/` past ~15 files with no domain prefix in the names, or holding pure functions that belong in `utils/` or `shared/` (`structure.md`).
+15. **Sibling layer coupling** — `admin` reaching into `client` or vice versa, via a `#layers/` alias, a relative path out of the layer root, or an auto-imported symbol the layer does not define. Shared code moves down to `base`, never sideways (`structure.md`).
