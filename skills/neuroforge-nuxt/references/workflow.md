@@ -52,8 +52,16 @@ Present the NeuroForge files clearly. **Do not generate any code until the user 
 
 ---
 
-## 3. The 12 Factors of Agent Context Engineering
+## 3. The 12 Factors of Agent Context Engineering & Token Guardrails
 
+### High-Reasoning & Token Optimization Guardrails
+1. **Reasoning Budget**: Keep internal reasoning chains concise and high-signal; avoid speculative tangents.
+2. **Plan-First, Approve-Second Circuit Breaker**: Strictly forbidden from writing workspace code files on the first turn. Create pre-analysis memory files & task lists, state target files, present the plan, and await explicit approval ("Proceed" / "Start coding").
+3. **No Overengineering**: Propose direct, standard, boring solutions first. Do not add future-proofing or speculative abstractions.
+4. **Loop Prevention**: If any terminal command, build, or test fails twice, stop immediately. Do not attempt a third refactor without asking and presenting the root cause to the user.
+5. **Compactness & Minimal Chat**: Skip conversational greetings, summaries, or post-execution explanations. Deliver clean code and markdown.
+
+### The 12 Factors of Agent Context Engineering
 Apply in every thought process:
 1. **Natural language → tool calls**: Break every task into "reason → decide → document → act" phases.
 2. **Own your prompts**: Self-refine internal reasoning for clarity and predictability before proceeding.
