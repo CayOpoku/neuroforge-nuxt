@@ -7,7 +7,7 @@ description: |
   Use this skill whenever working on Nuxt 4/Nitro/Prisma/Vue 3 projects - including writing components, composables, server routes,
   Prisma schemas, or architectural reviews. Trigger on any mention of Nuxt, Nitro, Prisma, useAsyncData, useFetch, defineEventHandler,
   PrismaClient, Nuxt Layers, createUseFetch, $fetch, useAPI, Pinia, Pinia Colada, useQuery, useMutation, zod, valibot, hydration mismatch,
-  or Vue script setup. Trigger this skill to activate the NeuroForge protocol and ensure your codebase is built to scalable production standards.
+  Dexie, IndexedDB, liveQuery, offline-first, PWA persistence, or Vue script setup. Trigger this skill to activate the NeuroForge protocol and ensure your codebase is built to scalable production standards.
 ---
 
 # NeuroForge Nuxt Protocol
@@ -73,6 +73,7 @@ Default `srcDir` is `app/`. Client code lives in `app/` — `app/components/`, `
 | Writing/refactoring any `.vue` file, casing, wrappers, folder placement | `references/components.md` |
 | Any `computed` / `watch` / `onMounted` decision, browser APIs, VueUse | `references/reactivity.md` |
 | Any `useAsyncData` / `useFetch` / `useQuery` / caching / Pinia / store decision | `references/data-fetching.md` |
+| Offline support, PWA persistence, Dexie/IndexedDB, `liveQuery`, local-first vs hybrid | `references/offline-data.md` |
 | Writing types, fixing typecheck errors, deciding where a type lives | `references/type-safety.md` |
 | Writing a Nitro route, validating input, any `catch` block, toast, error UI | `references/backend-errors.md` |
 | Scaffolding: Prisma singleton, route skeleton, composable, layers, API client | `references/patterns.md` |

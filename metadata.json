@@ -1,15 +1,16 @@
 {
-  "version": "3.0.0",
+  "version": "3.1.0",
   "organization": "NeuroForge Nuxt",
   "origin-date": "April 2026",
   "last-modified": "September 2026",
   "author": "cayopku",
-  "abstract": "NeuroForge Nuxt is a specialized engineering system for building premium SaaS applications with Nuxt 4, Nitro, Prisma, TypeScript, and Vue 3. It enforces a severity-tiered Analysis First workflow using NeuroForge memory files, schema-validated server contracts, cached data fetching with Pinia Colada, Laws of UX and accessibility standards, reusable Shadcn app wrappers, and senior SaaS engineering standards.",
+  "abstract": "NeuroForge Nuxt is a specialized engineering system for building premium SaaS applications with Nuxt 4, Nitro, Prisma, TypeScript, and Vue 3. It enforces a severity-tiered Analysis First workflow using NeuroForge memory files, schema-validated server contracts, cached data fetching with Pinia Colada, optional offline-first persistence with Dexie/IndexedDB, Laws of UX and accessibility standards, reusable Shadcn app wrappers, and senior SaaS engineering standards.",
   "references": [
     "https://lawsofux.com/",
     "https://nuxt.com/",
     "https://pinia-colada.esm.dev/",
     "https://vueuse.org/",
+    "https://dexie.org/",
     "https://github.com/vueuse/skills",
     "https://www.skills.sh/mattpocock/skills/handoff"
   ]
