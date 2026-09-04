@@ -10,6 +10,21 @@ When investigating bugs, unexpected behaviors, or data flow issues:
 1. **Lean on `console.log` Diagnostics**: Instead of burning context tokens guessing solutions or making speculative changes, insert targeted `console.log` statements to observe actual runtime values and execution paths.
 2. **Clean Up Log Statements**: Once the root cause is identified and resolved, remove temporary debugging `console.log` calls to maintain clean code.
 
+### Why frontend bugs cost more — and the fix
+
+A Nitro bug has ground truth you can reach alone: throw, log, typecheck, read the terminal. **A frontend bug's ground truth is in the developer's browser, on their screen.** You cannot see it. The failure mode is substituting the only thing you *can* do alone — reading more files, guessing wider — for the one observation that would settle it.
+
+So make the developer the instrument. They are sitting in front of the running app:
+
+1. **Write the log, don't hunt for the answer.** One or two labelled `console.log`s at the exact point where the value should be right.
+2. **Tell them precisely what to do** — which page, which click, which tab. *"Load `/dashboard`, click Save, paste what `DEBUG_SAVE:` prints."*
+3. **Stop and wait.** Do not read more files while waiting. Do not ship a speculative fix "in the meantime".
+4. **Read the output, then decide.** Real values beat five more file reads every time.
+
+**Before a second fix attempt, you must have an observation** — a log, an error, something they saw. Two fixes for one symptom with no new evidence between them means stop guessing and instrument (`SKILL.md` → Diagnose mode).
+
+Ask for what only they can see: the exact error text, what the network tab shows, whether the value is wrong or missing, whether it ever worked, what changed since it did.
+
 ---
 
 ## 2. Explicit Confirmation for Diagnostics & Linting Commands

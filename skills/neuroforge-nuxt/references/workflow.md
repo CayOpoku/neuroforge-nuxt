@@ -9,8 +9,8 @@ Load this for **Tier 2** work: a bare invocation with no task, a new feature, a 
 **Invoked with no task?** That is the full audit. Do not ask what the user wants — scan.
 
 1. Say `Activating NeuroForge analysis...` and nothing else.
-2. **Read `neuroforge/` before reading the codebase** — it is the record of what has already been decided and done. Section 1 covers how to inventory it.
-3. Scan the whole codebase: folder structure, `nuxt.config.ts`, layers, `app/` tree, `server/` routes, `prisma/schema.prisma`, composables, stores, and `package.json`.
+2. **Read `neuroforge/` before reading the codebase** — it is the record of what has already been decided and done. Start with `00-answers.md` if it exists: it is one screen long and tells you what not to ask. Section 1 covers how to inventory the rest.
+3. Scan the codebase: folder structure, `nuxt.config.ts`, layers, `app/` tree, `server/` routes, `prisma/schema.prisma`, composables, stores, and `package.json`. **"The whole codebase" is this repository and nothing above it** — never traverse to the home directory, a parent folder or a sibling project. Skip `node_modules/`, `.nuxt/`, `.output/` and build artefacts.
 4. Write the analysis files in section 2.
 5. **Report what is actually wrong** — dead files, god components, duplicated logic, unvalidated boundaries, `any` escapes, unbounded queries, imperative reactivity, false fallbacks, hardcoded errors (the full list is in `smells.md`).
 6. **Report the `neuroforge/` folder status** — done, outstanding, and what to delete (section 1).
@@ -39,7 +39,9 @@ Do not trust a file's own claims. **Verify every recommendation against the curr
 | **Orphaned** | Its subject was abandoned, or the files it analysed are gone. |
 | **Misplaced** | It is not an analysis document at all — a `task.md`, `todo.md`, or any checklist file that should never have been written here. Always a delete candidate, whatever its contents. |
 
-`00-project-overview.md` is never any of these. It is permanent — never a prune candidate.
+`00-project-overview.md` and `00-answers.md` are never any of these. Both are permanent — never prune candidates, never archived.
+
+**`00-answers.md` is the settled-answers log** (`SKILL.md` → Working with the developer): environment facts, decisions already made, stated preferences, one dated line each. **Read it before the codebase scan and before asking anything** — it is the cheapest file in the folder and it stops you re-asking what was answered three sessions ago. Append to it whenever the developer settles something; never let it accumulate open questions.
 
 If the inventory turns up a checklist file, say so plainly, recreate its unfinished items in the IDE's task artifact so nothing is lost, and put the file on the delete list.
 
@@ -129,7 +131,7 @@ Present the files. Write no implementation code until the user says "Proceed" or
 2. **Tools are structured outputs.** Think `{ goal, constraints, options, chosen_path, rationale }`.
 3. **Explicit control flow:** Analyse → Document → Present → Wait → Execute → Verify.
 4. **One concern per file.** Narrow responsibility per markdown file and per code module.
-5. **Contact humans through files.** Surface trade-offs and open questions in `neuroforge/`, not in long chat messages.
+5. **Analysis goes in files; questions go to the developer.** `neuroforge/` records decisions, trade-offs and rationale — that is what a file is good at. A question that is *blocking you right now* is not a document: ask it in chat, in one line, and wait. Never bury something you need answered in a file someone has to go and find.
 6. **Stateless reasoning.** `neuroforge/` carries the accumulated state, not the transcript.
 
 ---
