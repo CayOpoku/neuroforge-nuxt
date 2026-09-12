@@ -75,6 +75,8 @@ NeuroForge ensures your AI agent follows these Nuxt 4 / Nitro patterns religious
 - **Authorisation by Session**: Queries scoped by the session user, never by a client-supplied id. Tenant scoping enforced in every `where`.
 - **Accessibility & Performance**: Keyboard operability, focus management and contrast treated as part of the design; lazy hydration, `<nuxt-img>` and mandatory pagination as part of shipping.
 - **Hydration Safety**: Automatic detection of `window`/`document` usage and non-deterministic state causes.
+- **Loud Failures Only**: No `getErrorMessage(error) || "Something went wrong"`, no empty `catch`, no UI default standing in for a failed request. A backend fault reaches the screen intact instead of being swept under a reassuring generic string.
+- **Comments That Earn Their Place**: One-line *why* comments, never header essays, never restating the code, and never a pointer into the local-only `neuroforge/` folder that a teammate's clone will not have.
 - **Prisma Singleton**: Ensures database connections are managed correctly for HMR and production.
 - **Nitro Skeletons**: Clean, typed event handlers with standardized error responses.
 

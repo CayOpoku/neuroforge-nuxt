@@ -155,7 +155,57 @@ Field-level validation errors (the `data.fields` array from section 1) are rende
 
 ---
 
-## 4. Rendering errors
+## 4. The message is terminal — never `||` a fallback onto it
+
+**The single worst thing you can do to this system is put a default after the utility that reads the backend.**
+
+```ts
+// ✗ All of these are banned
+toast.error(getErrorMessage(error) || 'Something went wrong')
+toast.error(getErrorMessage(error) ?? 'Failed to save changes')
+const message = getErrorMessage(error) || DEFAULT_ERROR
+catch (error) { toast.error('Could not load orders') }
+catch { /* ignore */ }
+```
+
+### Why this is a hard rule, not a style preference
+
+`getErrorMessage` returns a non-empty string in **every** branch — §3 ends in `UNKNOWN_FALLBACK`. So the `||` arm is either dead code, or it is live and you have just proved the utility has a hole. Both cases are resolved in `app/utils/error.ts`, never at the call site.
+
+What the `||` actually does is fire the day the backend changes shape — a new error envelope, a renamed field, a proxy that wraps the payload. On that day the real message (*"Order total must be positive"*, *"Tenant quota exceeded"*, *"relation orders.user_id does not exist"*) is silently replaced with a reassuring generic, the UI looks like it is working as designed, and nobody — user or developer — learns that the backend broke. **A silent sweep is more expensive than a crash**: the crash is fixed the same afternoon; the generic string survives to production and gets reported months later as "it sometimes doesn't save".
+
+One character of syntax defeats §2 entirely. Do not write it.
+
+### The rules
+
+- **`getErrorMessage(error)` is terminal.** Its return value goes straight into the toast, alert or field. No `||`, no `??`, no falsy ternary, no `.trim() ||`, no wrapping helper that supplies a default.
+- **Same for every sibling utility** — `getFieldErrors`, `parseApiError`, `useApiError`, anything whose job is to extract backend truth. A helper that reads the backend is never OR'd with a guess.
+- **Fallbacks live inside the utility**, as the four named transport constants of §2–§3, and nowhere else. If a real error shape falls through to `UNKNOWN_FALLBACK`, add that shape's branch to `getErrorMessage` and a test for it (`testing.md`) — one fix, testable, for every call site.
+- **Never swallow.** Every `catch` renders the message or rethrows. `catch {}`, `catch { return null }`, `catch { return [] }`, `.catch(() => undefined)` and a bare `console.error` with no UI are the same bug wearing different hats: the call failed and the screen says otherwise.
+- **Keep the raw shape reachable while developing**, so an unparsed payload is visible rather than guessed at:
+
+```ts
+catch (error) {
+  if (import.meta.dev) console.error('[orders] create failed', error)
+  toast.error(getErrorMessage(error))
+}
+```
+
+- **A generic string on screen is a finding.** If the user sees "An unexpected error occurred", treat it as an unhandled backend shape and go read the actual response — it is a bug in `getErrorMessage`, not an acceptable outcome.
+
+### Audit
+
+Grep before you claim a codebase is clean. Every hit is a finding:
+
+```bash
+grep -rnE "getErrorMessage\(.*\)\s*(\|\||\?\?)" app/ shared/
+grep -rnE "catch\s*(\(.*\))?\s*\{\s*\}" app/ server/
+grep -rn "catch" app/ | grep -iE "'(Something went wrong|Failed to|An error|Unable to)"
+```
+
+---
+
+## 5. Rendering errors
 
 ```ts
 try {
@@ -170,7 +220,7 @@ With Pinia Colada, the same call belongs in `onError` — see `data-fetching.md`
 
 ---
 
-## 5. No false fallbacks
+## 6. No false fallbacks
 
 - **The smell:** defaulting UI state when a call fails — showing `status = 'Pending'` or `role = 'User'` because the fetch errored. This hides a system fault and shows the user a value that is not true.
 - **The rule:** render the failure. An `<app-alert>` or a toast carrying the backend message, so both the user and the developer see exactly what happened.

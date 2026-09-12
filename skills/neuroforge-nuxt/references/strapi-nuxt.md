@@ -237,7 +237,7 @@ if (error.value) {
 
 **Why blocking (`await`, not `lazy: true`) here specifically.** `data-fetching.md` makes non-blocking the default posture; a public, indexable catch-all route is the documented exception. The status code must be decided before the response headers are sent, and a lazy fetch has already committed `200 OK` by the time the data arrives.
 
-**Rendering an in-page 404 component is a soft 404** — the crawler gets `200` and indexes an error screen. If the design calls for a branded not-found page, put it in `error.vue` (`layouts-routing.md`) and let `createError` route to it. Same rule as `backend-errors.md` §5: never return a success shape for a failure.
+**Rendering an in-page 404 component is a soft 404** — the crawler gets `200` and indexes an error screen. If the design calls for a branded not-found page, put it in `error.vue` (`layouts-routing.md`) and let `createError` route to it. Same rule as `backend-errors.md` §6: never return a success shape for a failure.
 
 **Unknown `__component`.** A block in the payload with no entry in the registry means the deploy is behind the CMS. Do not render a red debug box in production. Dev-only:
 

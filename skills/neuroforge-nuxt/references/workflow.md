@@ -148,7 +148,7 @@ Generic clean-code theory is assumed knowledge. These are the deltas this codeba
 - **Named constants.** No magic numbers — `const ONE_DAY_IN_MS = 86_400_000`.
 - **Positive conditionals.** `if (isAvailable)` over `if (!isUnavailable)`.
 - **Config at the edges.** Runtime config, feature flags and constants live at the top level, never buried in a component.
-- **Comments explain *why*.** No commented-out code, no restating the line below.
+- **Comments are tiny, or absent.** One line, above the line it explains, saying *why*. No commented-out code, no restating the line below, no header blocks or banners, and never a comment referencing `neuroforge/` or the session that produced the code — `code-comments.md`.
 - **Consistency beats preference.** Match the surrounding file's existing idiom even if you would write it differently.
 
 ### Smells to name explicitly in a review

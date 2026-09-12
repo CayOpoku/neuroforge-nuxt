@@ -9,7 +9,7 @@ description: |
   PrismaClient, Nuxt Layers, createUseFetch, $fetch, useAPI, Pinia, Pinia Colada, useQuery, useMutation, zod, valibot, hydration mismatch,
   Dexie, IndexedDB, liveQuery, offline-first, PWA persistence, Strapi, Strapi 5, strapi::security, config/middlewares.ts, config/admin.ts,
   contentTypes.d.ts, components.d.ts, Strapi preview, draft mode, content types, dynamic zones, useStrapi, useStrapiPage, block registry,
-  [...slug].vue, Nodemailer, SMTP, contact form, transactional email, PDF download, or Vue script setup. Trigger this skill to activate the NeuroForge protocol and ensure your codebase is built to scalable production standards.
+  [...slug].vue, Nodemailer, SMTP, contact form, transactional email, PDF download, getErrorMessage, error fallback, silent error, code comments, JSDoc, or Vue script setup. Trigger this skill to activate the NeuroForge protocol and ensure your codebase is built to scalable production standards.
 ---
 
 # NeuroForge Nuxt Protocol
@@ -20,7 +20,7 @@ This file is a **router**. It holds only what applies to every task. Everything 
 
 ## Hard stops
 
-Six things never worth an exception. If one is in your way, say so in a line and wait.
+Seven things never worth an exception. If one is in your way, say so in a line and wait.
 
 1. **Never leave the project root.** No reading, listing, globbing or searching above it — not `C:\Users`, not the home directory, not a sibling repo. The repo is the world.
 2. **Never start, restart or kill a dev server, and never open a browser.** The developer already has the app running. Ask which port.
@@ -28,6 +28,7 @@ Six things never worth an exception. If one is in your way, say so in a line and
 4. **Never touch `.env*`, `.git/*`, `prisma/migrations/*`, lockfiles or auth/secret config** without explicit approval.
 5. **Never write implementation code in a Tier 2 analysis turn.** Not one line, not "while I was in there".
 6. **Never delete, overwrite or archive a file in `neuroforge/`.** Propose; the developer disposes.
+7. **Never `||` a fallback onto an error utility.** `getErrorMessage(error) || 'Something went wrong'` — or any default placed after a helper whose job is to read the backend — silently replaces the real failure with a reassuring string, and the broken backend goes unreported. The utility is terminal. Fix the utility, never the call site (`references/backend-errors.md` §4).
 
 ## Working with the developer
 
@@ -78,6 +79,8 @@ They are fluent in Nuxt, Vue and TypeScript. Skip the tutorial. Two sentences of
 - **Loop breaker:** two failures of the same command, **or two fixes that did not move the symptom**, means stop. Surface the root cause and what you would need to know. A third speculative attempt is not persistence — it is spending the developer's budget on a guess.
 - **Minimal chat:** no greetings, no filler, no restating what you just did. Dense code and markdown only. **A question, a checkpoint, or a plain explanation of *why* is never filler** — that is the job. (Also excepted: the Tier 2 activation line below.)
 - **Root cause over patch:** never mask a symptom you have not explained.
+- **Comments are tiny or absent.** One line, above the line it explains, saying *why* — never restating the code, never a header block or banner, and **never referencing `neuroforge/` or this conversation**: that folder is local analysis memory, not something every developer has in their clone (`references/code-comments.md`).
+- **Failures surface, always.** Never swallow a caught error, never default a value because a call failed, and never put a fallback string after an error utility — hard stop 7 (`references/backend-errors.md` §4).
 - **Declarative over imperative:** `computed` is the default. `watch`, `watchEffect`, `onMounted` and manual `onUnmounted` cleanup are side-effect escape hatches — reach for a VueUse composable first, and be able to say in one sentence why a watcher was necessary.
 - **Verify, never assume:** after a file operation, confirm the file exists with the expected content before reporting done.
 - **Zero `any`.** `unknown` + narrowing is the correct escape hatch, not `any`.
@@ -144,6 +147,7 @@ Default `srcDir` is `app/`. Client code lives in `app/` — `app/components/`, `
 | :--- | :--- |
 | Tier 2 protocol, memory file lifecycle, handoff, review verdict format | `references/workflow.md` |
 | Writing/refactoring any `.vue` file, casing, wrappers, folder placement, adding or customising a Shadcn component | `references/components.md` |
+| Writing any comment, JSDoc or TODO in source — read before commenting, not after | `references/code-comments.md` |
 | Any `computed` / `watch` / `onMounted` decision, browser APIs, VueUse | `references/reactivity.md` |
 | Any `useAsyncData` / `useFetch` / `useQuery` / caching / Pinia / store decision | `references/data-fetching.md` |
 | Offline support, PWA persistence, Dexie/IndexedDB, `liveQuery`, local-first vs hybrid | `references/offline-data.md` |
