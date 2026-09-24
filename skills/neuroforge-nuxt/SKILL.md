@@ -9,7 +9,8 @@ description: |
   PrismaClient, Nuxt Layers, createUseFetch, $fetch, useAPI, Pinia, Pinia Colada, useQuery, useMutation, zod, valibot, hydration mismatch,
   Dexie, IndexedDB, liveQuery, offline-first, PWA persistence, Strapi, Strapi 5, strapi::security, config/middlewares.ts, config/admin.ts,
   contentTypes.d.ts, components.d.ts, Strapi preview, draft mode, content types, dynamic zones, useStrapi, useStrapiPage, block registry,
-  [...slug].vue, Nodemailer, SMTP, contact form, transactional email, PDF download, getErrorMessage, error fallback, silent error, code comments, JSDoc, or Vue script setup. Trigger this skill to activate the NeuroForge protocol and ensure your codebase is built to scalable production standards.
+  [...slug].vue, Nodemailer, SMTP, contact form, transactional email, PDF download, getErrorMessage, error fallback, silent error, code comments, JSDoc,
+  @nuxt/scripts, useScript, scripts.registry, Google Analytics, GA4, gtag, analytics proxy, wrong country in analytics, Search Console vs GA, or Vue script setup. Trigger this skill to activate the NeuroForge protocol and ensure your codebase is built to scalable production standards.
 ---
 
 # NeuroForge Nuxt Protocol
@@ -157,6 +158,7 @@ Default `srcDir` is `app/`. Client code lives in `app/` — `app/components/`, `
 | Strapi backend: `config/middlewares.ts` CSP, `config/admin.ts` preview handler, plugins, preview env keys, `contentTypes.d.ts` / `components.d.ts` regeneration, new content type | `references/strapi-backend.md` |
 | Nuxt consuming Strapi: single-type vs dynamic-zone pages, `blocks/` architecture, block registry, `[...slug].vue`, `useStrapiPage`, preview handshake route, CMS SEO | `references/strapi-nuxt.md` |
 | Sending mail (Nodemailer, Strapi email plugin), contact forms, campaigns, generating or serving PDFs and downloads | `references/email-pdf.md` |
+| Adding an analytics vendor, `@nuxt/scripts` / `scripts.registry`, analytics numbers that look wrong (implausible countries, spam/bot suspicion, GA vs Search Console mismatch) | `references/analytics.md` |
 | Creating a layer, bloated `composables/`, where a file belongs, `features/` folders, auto-import config, cross-layer imports | `references/structure.md` |
 | Login, sessions, protecting a route, role checks | `references/auth-middleware.md` |
 | **Anything not behaving as expected at runtime — load this before your second fix attempt.** Hydration warning, SSR crash, `window is not defined`, a value that is wrong and you cannot say why | `references/debugging.md` |

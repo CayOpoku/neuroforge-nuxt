@@ -77,6 +77,7 @@ NeuroForge ensures your AI agent follows these Nuxt 4 / Nitro patterns religious
 - **Hydration Safety**: Automatic detection of `window`/`document` usage and non-deterministic state causes.
 - **Loud Failures Only**: No `getErrorMessage(error) || "Something went wrong"`, no empty `catch`, no UI default standing in for a failed request. A backend fault reaches the screen intact instead of being swept under a reassuring generic string.
 - **Comments That Earn Their Place**: One-line *why* comments, never header essays, never restating the code, and never a pointer into the local-only `neuroforge/` folder that a teammate's clone will not have.
+- **Analytics That Tells the Truth**: Every `@nuxt/scripts` analytics entry states its `proxy` choice explicitly, so GA4 never places every visitor at the server's IP. Odd analytics numbers are traced along the hit's path first, before anyone blames bots.
 - **Prisma Singleton**: Ensures database connections are managed correctly for HMR and production.
 - **Nitro Skeletons**: Clean, typed event handlers with standardized error responses.
 
