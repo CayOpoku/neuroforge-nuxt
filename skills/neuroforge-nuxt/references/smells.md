@@ -48,6 +48,33 @@ if (!config.stripeSecretKey) {
 
 Optional values with a sensible default are fine — the rule targets values whose absence breaks the app.
 
+### `runtimeConfig` declares keys, the host fills them
+
+```ts
+// ✅ nuxt.config.ts — empty strings only declare the keys
+runtimeConfig: {
+  smtpHost: '',
+  smtpPass: '',
+  contactInbox: '',
+  public: { siteUrl: '' },
+},
+```
+
+When the server starts, Nuxt fills each **existing** key from `NUXT_` + its SCREAMING_SNAKE name: `smtpHost` ← `NUXT_SMTP_HOST`, `contactInbox` ← `NUXT_CONTACT_INBOX`, `public.siteUrl` ← `NUXT_PUBLIC_SITE_URL`. Nothing else is needed.
+
+```ts
+// ❌ evaluated once, at `nuxt build`
+runtimeConfig: { smtpPass: process.env.SMTP_PASS || '' }
+```
+
+- **It bakes the value into `.output/`.** Whatever was in the build machine's env becomes part of the artifact. For a secret, anyone with the build files has it.
+- **The host's env is ignored.** An `SMTP_PASS` set in the hosting panel never reaches the running app. Only `NUXT_*` names override at start, and only for keys that exist.
+- **`|| ''` hides the absence.** The fail-loud check in the consumer (`if (!smtpHost) throw …`) is exactly what the fallback was defeating.
+
+So the developer sets `NUXT_*` names in the host and in local `.env`. `.env.example` lists the `NUXT_*` names, so the correct names are the documented ones. `process.env` in `nuxt.config.ts` is only for values consumed **at build time** (module options, prerender targets). Never a secret there.
+
+**Hosting panels (cPanel, Plesk, Render…):** type values without quotes. Unlike a `.env` file, the panel keeps the quotes as part of the value. After saving, the app needs a **restart** to read them (`debugging.md` §7).
+
 ---
 
 ## 4. Smells to flag in an audit
@@ -69,4 +96,5 @@ Optional values with a sensible default are fine — the rule targets values who
 15. **Sibling layer coupling** — `admin` reaching into `client` or vice versa, via a `#layers/` alias, a relative path out of the layer root, or an auto-imported symbol the layer does not define. Shared code moves down to `base`, never sideways (`structure.md`).
 16. **Hand-rolled Shadcn primitives** — a file in `ui/` that the CLI did not generate, an edited primitive, or a primitive reimplemented under another name. Reinstall it with `npx shadcn-vue@latest add <component>` and move the customisation into an `app/` wrapper (`components.md`).
 17. **Comment noise** — file-header blocks, section banners, comments restating the line below, commented-out code, or any comment pointing at `neuroforge/`, an analysis file, or the session that wrote the code (`code-comments.md`).
-18. **Implicit analytics proxy** — a `scripts.registry` analytics entry with no explicit `proxy` setting. `@nuxt/scripts` proxies through Nitro by default, and GA4 then geolocates every visitor to the server's IP (`analytics.md` §2).
+18. **Misconfigured analytics entry** — a `scripts.registry` analytics entry with no explicit `proxy` (defaults to proxying, so GA4 places every visitor at the server's IP), with no `trigger` (never loads), outside `$production`, or with a hand-written `runtimeConfig.public.scripts` ID / `|| ''` fallback that duplicates what the module seeds from env (`analytics.md` §2–3).
+19. **Build-time env in `runtimeConfig`** — `process.env.X || ''` as a `runtimeConfig` value. It bakes the build machine's value (secrets included) into `.output/`, and ignores the host's env at runtime. Declare the key empty and set `NUXT_*` in the host (§3).

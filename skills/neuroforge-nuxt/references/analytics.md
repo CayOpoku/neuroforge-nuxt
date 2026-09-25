@@ -41,27 +41,55 @@ Dev runs make it worse: in dev the proxy runs on the developer's machine, so dev
 
 ---
 
-## 3. Fix — send hits direct
+## 3. Registering a vendor — the canonical entry
 
-Per script, in `scripts.registry`. `proxy` is a script option in the object form:
+This is both the setup for a new vendor and the fix for §2:
 
 ```ts
 // nuxt.config.ts
-scripts: {
-  registry: {
-    googleAnalytics: {
-      id: process.env.NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID,
-      trigger: 'server',
-      // proxied hits geolocate to the server's IP, not the visitor's
-      proxy: false,
+$production: {
+  scripts: {
+    registry: {
+      googleAnalytics: {
+        trigger: 'onNuxtReady',
+        // proxied hits geolocate to the server's IP, not the visitor's
+        proxy: false,
+      },
     },
   },
 },
 ```
 
-- **CSP:** direct hits need `*.google-analytics.com` (and `*.googletagmanager.com` for the loader) in `connect-src` / `script-src`. Check before deploying — a CSP block fails silently in analytics.
-- **Verify after deploy:** Network tab shows the vendor host (§1), then GA4 Realtime shows a normal country spread within minutes.
-- **Every analytics entry states `proxy` explicitly**, with a one-line why. It is a data-correctness decision, not a default to inherit.
+Every line is a decision:
+
+- **Under `$production`.** Dev never loads the script, so the developer's own visits never reach the live property (§2). Test a real hit with `nuxt build && nuxt preview` and the env var set.
+- **`trigger` is explicit.** `onNuxtReady` loads after the page is interactive, which keeps analytics off the critical path. Verified in 1.3.9: a registry entry with no trigger **never loads at all**. The module won't warn you, and it looks exactly like a working install with zero traffic.
+- **`proxy: false`, with a one-line why.** This is a data-correctness decision, so don't inherit it from the default.
+- **No `id` in the config, and no `runtimeConfig` block.** For registry scripts with env defaults, the module reads `NUXT_PUBLIC_SCRIPTS_<KEY>_<FIELD>` (e.g. `NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID`) and seeds `runtimeConfig.public.scripts.<key>` itself. Because that key exists, Nuxt overrides it from the same env var when the server starts. The ID is set at deploy time, not baked into the build.
+
+Do not add this by hand. It is a smell:
+
+```ts
+// ❌ duplicates what the module already writes
+runtimeConfig: { public: { scripts: { googleAnalytics: { id: process.env.NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID || '' } } } }
+```
+
+It puts the ID in two places to keep in sync. The `|| ''` hides a missing production ID: GA silently doesn't load (hard stop 7's logic applies to config too, see `smells.md` §3). And it sits outside `$production`, so dev carries an ID nothing uses. The same goes for `id: process.env.X` inside the registry entry, which is redundant and bakes the build-time value in as the default.
+
+Verify against the installed version before relying on this:
+
+```bash
+grep -n "envDefaults\|NUXT_PUBLIC_SCRIPTS_" node_modules/@nuxt/scripts/dist/module.mjs | head
+```
+
+**Expected dev warning:** *"NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID is set but googleAnalytics is not registered"* appears when the local `.env` has the ID and the entry lives under `$production`. It's harmless. Clear the ID from the local `.env` to silence it. Don't move the registry entry out of `$production`.
+
+**Before deploying:**
+
+- **Env:** the real `G-…` ID is set in the production environment as `NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID`.
+- **CSP:** direct hits need `*.google-analytics.com` (and `*.googletagmanager.com` for the loader) in `connect-src` / `script-src`. A CSP block fails silently in analytics.
+
+**After deploying:** Network → filter `collect` shows requests to the vendor host carrying the `G-…` ID (§1), and GA4 Realtime shows the visit within a minute with a plausible country.
 
 **When first-party collection is genuinely required** (ad-blocker resilience, consent posture): keep the proxy only for a vendor that documents honouring a forwarded client IP. Plausible's proxy guide does. For GA4 the supported route is server-side GTM, not the `@nuxt/scripts` proxy. Say this plainly rather than shipping a proxy that corrupts geography.
 
@@ -86,3 +114,30 @@ Same Diagnose-mode discipline as any bug (`SKILL.md`). Two extra rules:
 2. **Sources that count different things never match.** Search Console = Google Search clicks, 28-day default. GA4 = all users, whatever window the report uses, only since the tag went live. Name the mismatch in units and window before calling anything missing.
 
 The opening pair is almost always: *"Either the traffic is fake (spam / bot), or our pipeline is rewriting real traffic (proxy, dev hits, consent mode, a filter)."* The cheapest separator is the developer reading Sessions by source and Hostname for the suspect segment — ask for that before theorising further.
+
+**No `collect` request at all** on the live site is a different problem. The script never ran. Check the Console first: an app crash before `onNuxtReady` means the trigger never fires, and the only clue is a "gtag … preloaded but not used" warning (`debugging.md` §7).
+
+---
+
+## 6. Strapi GA dashboard plugin — setup
+
+For `strapi-google-analytics-dashboard` or similar. The plugin passes the credentials straight to Google's `BetaAnalyticsDataClient`. Its settings need three values that are easy to mix up:
+
+| Field | Value | Where from |
+| :--- | :--- | :--- |
+| Property ID | A **number**, not `G-…` | GA4 → Admin → Property details, or the `p123456789` in the GA URL |
+| Measurement ID | `G-…` | The web data stream |
+| Credentials | The **whole** service-account JSON key, pasted unedited (`\n` inside `private_key` stays as is) | Google Cloud → IAM → Service accounts → Keys → JSON |
+
+Prerequisites, in order:
+1. Enable the **Google Analytics Data API** in the Cloud project.
+2. Create the service account. It needs no Cloud roles.
+3. Add its email in **GA4** → Property access management as **Viewer**. Skipping this step is the usual cause of an "invalid credentials" error.
+4. Rebuild the Strapi admin after installing (`npm run build`), because the plugin adds admin pages.
+
+Reading the result:
+
+- **"Invalid credentials or property ID"**: Viewer access is missing or hasn't propagated yet (it can take minutes), or `G-…` was pasted as the Property ID.
+- **"No data"**: the credentials were **accepted**. Either the site isn't sending hits yet (§3, after deploying), or GA's standard reports haven't caught up, which takes 24–48 h. Realtime confirms hits long before the plugin does.
+
+**The key file is a password.** Never committed, never pasted into chat, deleted locally once it is saved in Strapi. Restrict Strapi Settings to Super Admins, because anyone with Settings access can read the key.

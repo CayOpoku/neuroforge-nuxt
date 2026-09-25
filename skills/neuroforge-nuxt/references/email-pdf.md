@@ -105,13 +105,17 @@ const ContactSchema = z.object({
   name: z.string().min(1).max(120),
   email: z.string().email(),
   message: z.string().min(10).max(5000),
-  company: z.string().max(0).optional(),   // honeypot: real users leave it empty
+  website: z.string().optional(),          // honeypot, checked in the handler (§3 "Honeypot")
 })
 
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, ContactSchema.parse)
 
-  if (body.company) return { ok: true }    // silently drop bots — never tell them why
+  if (body.website) {
+    // silent to the bot, visible to us: a real visitor tripping it would otherwise vanish
+    console.warn('[contact] honeypot tripped')
+    return { ok: true }
+  }
 
   try {
     await useMailer().sendMail({
@@ -137,7 +141,44 @@ export default defineEventHandler(async (event) => {
 - **Rate-limit.** A contact endpoint with no limit is a free relay for spam through your domain's reputation. `nuxt-security`'s rate limiter, or a per-IP counter in Nitro storage — plus the honeypot, which costs nothing.
 - **Never expose the endpoint's payload shape to the client without the same schema.** Share `ContactSchema` from `shared/` so the form and the route validate identically.
 
+### Honeypot
+
+A field real visitors never see, so it always arrives empty from a person. Bots fill every field they find.
+
+```vue
+<!-- hidden from people, still present for bots -->
+<div class="absolute -left-[9999px]" aria-hidden="true">
+  <label for="website">Leave this empty</label>
+  <input id="website" v-model="form.website" name="website" type="text" tabindex="-1" autocomplete="off">
+</div>
+```
+
+- **Validate it loosely and check it in the handler.** `z.string().max(0)` looks tidy but rejects a bot with a 400 and a validation message, which tells it exactly which field to leave alone. Accept any string, then return the same `{ ok: true }` a real send returns.
+- **Silent to the bot, never silent to us.** Log each trip. If autofill or a password manager starts filling the field, real leads disappear with a success message, and the log is the only way anyone finds out. That's hard stop 7's logic applied to spam filtering.
+- **Pick a name no real field uses.** `website` is conventional. Never `company`, `email` or `phone`: a form that later adds a real `company` field silently drops everyone who fills it in.
+- **Keep it out of people's way:** off-screen rather than `display: none` (some bots skip hidden inputs), `tabindex="-1"` so keyboard users never land on it, `aria-hidden` so screen readers skip it, and `autocomplete="off"` so the browser doesn't fill it.
+- **It stops dumb bots only.** A headless browser renders the page and leaves the field empty. The rate limit below is the second layer. Add a CAPTCHA/Turnstile only if the log shows spam getting past both.
+- A `website=""` in the request payload is expected and correct. It's the trap, not a leak.
+
 **Verify the SMTP path early.** A dev inbox (Mailpit, Ethereal, MailHog) in `.env.example` beats discovering on launch day that port 587 is blocked in the deploy environment.
+
+### Diagnosing a send that doesn't arrive
+
+Establish that the route ran at all. No `POST /api/contact` in the Network tab (with **Preserve log** on) means the form never hydrated, so debug the page, not the mailer (`debugging.md` §7). Then read the response:
+
+| Response | Meaning | Next |
+| :--- | :--- | :--- |
+| `200 { ok: true }` | The SMTP server **accepted** the message | Inbox, then spam. Then SPF/DKIM/DMARC for the `from` domain. |
+| `502` from the catch | The SMTP server **refused** it | Read the app log after `[mail] send failed`. The client never sees the reason, by design. |
+| `500 "…not configured"` | Env missing, or app not restarted since it was set | `smells.md` §3: `NUXT_*` names, restart |
+
+The logged error decides it. Ask the developer for those lines, with passwords redacted:
+
+- **`EAUTH` / 535** — wrong credentials. The password must be the **mailbox** password, not the hosting-panel login, and the user must be the full address.
+- **Certificate / altname error** — the host name doesn't match the certificate the mail server presents. On shared hosting, `mail.<domain>` often points at a server whose certificate is issued for the host's own name. Use the server hostname the host's "Connect devices / mail client settings" page lists.
+- **`ECONNREFUSED` / `ETIMEDOUT`** — the port is blocked from where the app runs. Try the other of 465/587, or ask the host.
+
+Port 465 is implicit TLS and 587 is STARTTLS. The transporter above derives `secure` from the port, so the developer only ever sets the port.
 
 ---
 
